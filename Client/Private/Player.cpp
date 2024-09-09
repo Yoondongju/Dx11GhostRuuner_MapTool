@@ -53,19 +53,23 @@ HRESULT CPlayer::Initialize(void* pArg)
         return E_FAIL;
 
 
+
     XMStoreFloat4x4(&m_RotationMatrix, XMMatrixIdentity());
 
     m_eCurAnimationID = PLAYER_ANIMATIONID::IDLE;
     m_pFsm->Set_State(PLAYER_ANIMATIONID::IDLE);
 
+
+
+
+
+
+
     return S_OK;
 }
 
 void CPlayer::Priority_Update(_float fTimeDelta)
-{
-   
-
-
+{ 
     for (auto& pPartObject : m_Parts)
         pPartObject->Priority_Update(fTimeDelta);
    

@@ -42,7 +42,7 @@ private:
 
 private:
 	HRESULT		Ready_Component();
-
+	HRESULT		Ready_Parts();
 
 public:
 	static CSpider* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

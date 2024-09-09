@@ -144,7 +144,6 @@ public:
 	PxPhysics* Get_Physics();	
 	PxScene* Get_Scene();		
 	PxMaterial* Get_Material(); 
-
 #pragma endregion
 
 

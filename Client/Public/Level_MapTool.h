@@ -19,8 +19,53 @@ class CLevel_MapTool final : public CLevel
 {
 public:
 	enum MAIN_CHECK_TYPE { TERRAIN, OBJECT, CAMERA , NAVIGATION,MAIN_CHECK_TYPE_END};
-	enum OBJECT_CHECK_TYPE {KIT, DEBRIS , SIGN , WALL , RUSSIAN_SIGN , CITY ,BUILDING , MONSTER , ETC, OBJECT_CHECK_TYPE_END};
-	// enum ANIM_OBJECT_CHECK_TYPE { PLAYER , ANIM_OBJECT_CHECK_TYPE_END};
+	enum OBJECT_TYPE
+	{
+		DECORATIVE_OBJECT,
+		STATIC_OBJECT,
+		DYNAMIC_OBJECT,
+
+
+		OBJECT_TYPE_END,
+	};
+	enum MODEL_CHECK_LIST {
+		KIT,
+		DEBRIS ,
+		BARRICADE,
+		BILLBOARD,
+		BOSS_FIGHT1,
+		BOSS_FIGHT3,
+		CATWALK,
+		CRANE,
+		CYBERCITY,
+		DECO,
+		FAN,
+		INDUSTRIAL_ELEVATOR,
+		LAMP,
+		PIPE,
+		PLATFORM,
+		ROTATIONFAN,
+		TRAIN,
+		SIGN , 
+		WALL , 
+		RUSSIAN_SIGN ,
+		CITY ,
+		BUILDING ,
+		WIRE,
+		BODYBAG,
+		CLIMBOBJECT,
+
+		SPIDER,		
+		ELITE,
+		JETPACK,
+		MIRA,
+		PISTOL,
+		SNIPER,
+
+		ETC, 
+		MODEL_CHECK_TYPE_END
+	};
+
 
 public:
 	typedef struct
@@ -30,10 +75,16 @@ public:
 	}PREVIEW_OBJECT;
 
 
-
 private:
 	CLevel_MapTool(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual ~CLevel_MapTool() = default;
+
+
+public:
+	virtual HRESULT Initialize() override;
+	virtual void Update(_float fTimeDelta) override;
+	virtual HRESULT Render() override;
+	virtual HRESULT ImGui_GridRender() override;
 
 public:
 	static _bool	IsPicking()
@@ -43,12 +94,6 @@ public:
 		else
 			return false;
 	}
-
-public:
-	virtual HRESULT Initialize() override;
-	virtual void Update(_float fTimeDelta) override;
-	virtual HRESULT Render() override;
-	virtual HRESULT ImGui_GridRender() override;
 
 
 private:
@@ -66,10 +111,13 @@ private:
 
 	_bool				m_bPerspectiveMode = true;
 	MAIN_CHECK_TYPE		m_eMainCheckType = { MAIN_CHECK_TYPE::MAIN_CHECK_TYPE_END };
-	OBJECT_CHECK_TYPE	m_eObjectCheckType = { OBJECT_CHECK_TYPE::OBJECT_CHECK_TYPE_END };
 
 
-	_uint				m_iNumModelList[OBJECT_CHECK_TYPE::OBJECT_CHECK_TYPE_END] = { 0 };
+	MODEL_CHECK_LIST	m_eModelCheckType = { MODEL_CHECK_LIST::MODEL_CHECK_TYPE_END };
+
+
+
+
 	
 
 	_bool				m_bIsCreatePrewViewObject = false;
@@ -85,10 +133,13 @@ private:
 private:
 	HRESULT Ready_Camera();
 	HRESULT	Ready_ImGui();
-		
+
+	HRESULT Ready_Object();
+
 	void    ImGui_Render();					// 기본 ImGui
 	void    Second_ImGui_Render();			// 현재 레벨에 있는 오브젝트의 갯수표현
 	void	Third_ImGui_Render();			// 애니메이션에 관련된 정보들을 표현
+
 
 private:
 	HRESULT Create_PreViewObject(_int iSelectObjectNum);
@@ -113,8 +164,7 @@ private:
 	void Open_UIDialog();				// UI
 
 
-private:
-	HRESULT Ready_Object();
+
 
 
 

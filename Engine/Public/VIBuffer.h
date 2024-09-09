@@ -10,6 +10,12 @@ protected:
 	CVIBuffer(const CVIBuffer& Prototype);
 	virtual ~CVIBuffer() = default;
 
+
+public:
+	_uint		Get_NumVertices() { return m_iNumVertices; }
+	_uint		Get_NumIndices() { return m_iNumIndices; }
+
+
 public:
 	virtual HRESULT Initialize_Prototype() override;
 	virtual HRESULT Initialize(void* pArg) override;

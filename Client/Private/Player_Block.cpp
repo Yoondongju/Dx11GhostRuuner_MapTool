@@ -5,7 +5,7 @@
 #include "GameInstance.h"
 
 CPlayer_Block::CPlayer_Block(class CGameObject* pOwner)
-	: CState{ CPlayer::PLAYER_ANIMATIONID::BLOCK_1 , pOwner }
+	: CState{ CPlayer::PLAYER_ANIMATIONID::BLOCK_R1 , pOwner }
 {
 
 }

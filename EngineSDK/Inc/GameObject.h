@@ -11,8 +11,10 @@ class ENGINE_DLL CGameObject abstract : public CBase
 public:
 	typedef struct : public CTransform::TRANSFORM_DESC
 	{
-		_uint iObjectType = 0;
+		_uint iModelListType = 0;
 		_uint iModelNum = 0;
+
+		_uint iObjectType = 0;
 
 	} GAMEOBJECT_DESC;
 
@@ -42,7 +44,7 @@ public:
 	virtual class CNavigation*  Get_Navigation() { return nullptr; }
 
 
-	_uint		Get_ObjectType() { return m_iObjectType; }
+	_uint		Get_ModelListType() { return m_iModelListType; }
 	_uint		Get_ModelNum() { return m_iModelNum; }
 
 public:
@@ -68,7 +70,7 @@ protected:
 
 	class CGameInstance*	m_pGameInstance = { nullptr };
 
-	_uint					m_iObjectType = { 0 };			// 맵툴에서 오브젝트 타입을 저장해야함.
+	_uint					m_iModelListType = { 0 };		// 내가 픽한 모델리스트의 타입
 	_uint					m_iModelNum = 0;
 
 	_wstring				m_strPrototypeName = L"";		// 맵툴에서 저장불러오기할때 도저히 판단기준을 잡을수없어서 만듬
@@ -77,6 +79,8 @@ protected:
 
 	_bool					m_isDead = { false };
 
+
+	_uint					m_iObjectType = {};		// 데코,스태틱,다이나믹
 
 
 

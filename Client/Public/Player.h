@@ -27,27 +27,70 @@ public:
 		DASH_B,
 		DASH_L,
 		DASH_R,
-		BLOCK_1,
-		BLOCK_2,
-		BLOCK_3,
+		BLOCK_R1,
+		BLOCK_R2,
+		BLOCK_R3,
 		HOOK_UP,
-		HOOK_DOWN,
-		ATTACK_1,
-		ATTACK_2,
-		ATTACK_3,
+
+		BLOCK_L1,
+		BLOCK_L2,
+		BLOCK_L3,
+
+		ATTACK_R1,
+		ATTACK_R2,
+		ATTACK_R3,
+
+		ATTACK_L1,
+		ATTACK_L2,
+		ATTACK_L3,
+
+		JUMP_IDLE,
+
 		DASH_F,
 		IDLE,
+
+		JUMP_START,
+		JUMP_LOOP,
+		JUMP_END,
+
 		RUN,
 		RUN_WALL_L,
 		RUN_WALL_R,
+
 		SLIDE,
 		WALK,
+
+		FORCE_PUSH,
+
+		FURR_AIM_LOOP,				// 정신집중
+		FURR_AIM_TO_IDLE,
+		FURR_IDLE_TO_AIM,
+		
+		RIFT_PICKUP,
+
+		FURR_AIM_TRICUT,
+
+		HACK_IDLE_TO_AIM_LOOP,
+
+		NAMI_AIM_ATTACK_TO_IDLE,
+
+		HACK_AIM_TO_IDLE,			// 마인드컨트롤 해제하는거? 왼쪽손으로 바스라지는 느낌의 애니
+
+		DUMMY,
+
+		NAMI_IDLE_TO_AIM,			// 왼손 쫙 펴는거 
+
+		DUMMY2,
+
+
+
 		SH_ATTACK,
-		SH_BLOCK,
+
 		SH_DASH_B,
 		SH_DASH_F,
 		SH_DASH_L,
 		SH_DASH_R,
+
 		SH_IDLE,
 		SH_RUN,
 		SH_WALK,
@@ -55,23 +98,22 @@ public:
 		SH_RUN_WALL_R,
 		SH_KAT_TO_SHUR,				// 카타나에서 수리켄
 		SH_SHUR_TO_KAT,				// 수리켄에서 카타나
-		SCAN_START,
-		SCAN_END,
+
+		HACK_AIM_LOOP,
+
+		TIME_STOP,					// 시간정지
+
+		FURR_AIM_TO_DASH,			// 대쉬하면서 한번 베기
+		FURR_DASH_TRICUT,			// 대쉬하면서 여러번 베기
+
 		DEATH_1,
 		DEATH_2,
-		JUMP_START,
-		JUMP_LOOP,
-		JUMP_END,
-		FURR_AIM_LOOP,				// 정신집중
-		FURR_AIM_TO_IDLE,
-		FURR_IDLE_TO_AIM,
-		FURR_AIM_TRICUT,			// 정신집중하고 슥삭
-		NAMI_AIM_ATTACK_TO_IDLE,
-		NAMI_IDLE_TO_AIM,			// 왼손 쫙 펴는거 
-		SH_ZIPLINE_ATTACK,
-		SH_ZIPLINE_END,				// 탄창 갈기 애니메이션  
-		SH_ZIPLINE_LOOP,			// 탄창 갈기 애니메이션  
-		SH_ZIPLINE_START,			// 탄창 갈기 애니메이션  
+		
+		DRAW_SWORD,	
+		LOOKAT_HAND,
+		SPIN_A,
+		SPIN_B,
+
 
 		PLAYER_ANIMATION_END
 	};
@@ -99,12 +141,12 @@ public:
 private:
 	CFsm*					m_pFsm = { nullptr };
 	
-
-
 	PLAYER_ANIMATIONID		m_eCurAnimationID = { PLAYER_ANIMATION_END };
 
 	POINT					m_ptOldMousePos = {};
 	_float4x4				m_RotationMatrix = {};
+
+
 
 private:
 	HRESULT		Ready_Component();

@@ -19,20 +19,26 @@
 #include "Animation.h"
 #include "Channel.h"
 
-#include "Aid_props.h"
-#include "Building.h"
+#include "Decorative_Object.h"
+#include "Static_Object.h"
+#include "Dynamic_Object.h"
 
 #include "Spider.h"
 
 
 #include "Player.h"
 #include "PartObject.h"
+#include "Weapon_Player.h"
 
+#include "Jetpack.h"
+#include "Pistol.h"
+#include "Sniper.h"
 
 #include <codecvt>
 #pragma warning (disable : 4996)
 
 static ImGuizmo::OPERATION eGizmoType = { ImGuizmo::TRANSLATE };
+static CLevel_MapTool::OBJECT_TYPE eObjectType = { CLevel_MapTool::OBJECT_TYPE::STATIC_OBJECT };
 
 CGameObject* CLevel_MapTool::m_pPickedObj = nullptr;
 
@@ -85,7 +91,7 @@ HRESULT CLevel_MapTool::Initialize()
     Desc.fRotationPerSec = XMConvertToRadians(90.0f);
     //if (FAILED(m_pGameInstance->Add_CloneObject_ToLayer(LEVEL_MAPTOOL, TEXT("Layer_BackGround"), TEXT("Prototype_GameObject_Sky"),&Desc)))
 	//	return E_FAIL;
-
+    
     if (FAILED(m_pGameInstance->Add_CloneObject_ToLayer(LEVEL_MAPTOOL, TEXT("Layer_Player"), TEXT("Prototype_GameObject_Player"),&Desc)))
        assert(nullptr);
 
@@ -274,26 +280,26 @@ void CLevel_MapTool::Update(_float fTimeDelta)
     }
 
     
-    if (m_pPickedObj && m_pGameInstance->Get_KeyState(KEY::CTRL) == KEY_STATE::HOLD)
-    {
-        if (m_pGameInstance->Get_KeyState(KEY::Z) == KEY_STATE::TAP)
-        {
-            vector<CCell*>& Cells = m_pPickedObj->Get_Navigation()->Get_Cells();
-            vector<CCell*>& FreeCameraCells = m_pFreeCamera->Get_Navigation()->Get_Cells();
-
-            if (Cells.size() > 0)
-            {
-                Safe_Release(Cells.back());
-                Safe_Release(FreeCameraCells.back());
-
-                Cells.pop_back();
-                FreeCameraCells.pop_back();
-
-                if(m_iCellIndex > 0)
-                    --m_iCellIndex;
-            }         
-        }
-    }
+    //if (m_pPickedObj && m_pGameInstance->Get_KeyState(KEY::CTRL) == KEY_STATE::HOLD)
+    //{
+    //    if (m_pGameInstance->Get_KeyState(KEY::Z) == KEY_STATE::TAP)
+    //    {
+    //        vector<CCell*>& Cells = m_pPickedObj->Get_Navigation()->Get_Cells();
+    //        vector<CCell*>& FreeCameraCells = m_pFreeCamera->Get_Navigation()->Get_Cells();
+    //
+    //        if (Cells.size() > 0)
+    //        {
+    //            Safe_Release(Cells.back());
+    //            Safe_Release(FreeCameraCells.back());
+    //
+    //            Cells.pop_back();
+    //            FreeCameraCells.pop_back();
+    //
+    //            if(m_iCellIndex > 0)
+    //                --m_iCellIndex;
+    //        }         
+    //    }
+    //}
 
 
 
@@ -319,11 +325,19 @@ void CLevel_MapTool::Update(_float fTimeDelta)
 
     if (m_pGameInstance->Get_KeyState(KEY::CTRL) == KEY_STATE::HOLD && m_pGameInstance->Get_KeyState(KEY::LBUTTON) == KEY_STATE::TAP)
     {
-        if (IsPicking_ByObjects(&m_pPickedObj))       // 픽킹했다면 PickedObj에 값이 담길것이고.
-        {      
-           m_pGameInstance->Delete(LEVEL_MAPTOOL, CRenderer::RENDERGROUP::RG_NONBLEND, m_pPickedObj);
-           m_pPickedObj = nullptr;            
+        if (nullptr == m_pPickedObj)
+        {
+            MSG_BOX(TEXT("삭제할 오브젝트를 먼저 피킹하십쇼"));
         }
+        else
+        {
+            if (IsPicking_ByObjects(&m_pPickedObj))       // 픽킹했다면 PickedObj에 값이 담길것이고.
+            {
+                m_pGameInstance->Delete(LEVEL_MAPTOOL, CRenderer::RENDERGROUP::RG_NONBLEND, m_pPickedObj);
+                m_pPickedObj = nullptr;
+            }
+        }
+       
     }
 
 
@@ -343,7 +357,17 @@ void CLevel_MapTool::Update(_float fTimeDelta)
 
     if (m_pGameInstance->Get_KeyState(KEY::U) == KEY_STATE::TAP)
     {
-        m_pPickedObj = static_cast<CContainerObject*>(m_pGameInstance->Find_Player())->Get_Part(CPlayer::PARTID::PART_WEAPON);
+        CGameObject* pOwner = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Anim_Object").back();
+        m_pPickedObj = static_cast<CPistol*>(pOwner)->Get_Part(CPistol::PARTID::PART_WEAPON);
+
+        //m_pFreeCamera->Set_PickedObj(m_pPickedObj);
+    }
+
+    if (m_pGameInstance->Get_KeyState(KEY::Y) == KEY_STATE::TAP)
+    {
+        CGameObject* pOwner = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Anim_Object").back();
+        m_pPickedObj = static_cast<CSniper*>(pOwner)->Get_Part(CSniper::PARTID::PART_WEAPON);
+
         //m_pFreeCamera->Set_PickedObj(m_pPickedObj);
     }
 
@@ -587,37 +611,16 @@ void CLevel_MapTool::ImGui_Render()
             eGizmoType = ImGuizmo::SCALE;
 
 
-        ImGui::Dummy(ImVec2(0.0f, 15.0f)); // 높이가 10인 빈 공간 추가
-        ImGui::TextColored(ImVec4(1, 1, 0, 1), u8"This: PreViewObject->Scale");
+        ImGui::Dummy(ImVec2(0.0f, 15.0f)); // 높이가 10인 빈 공간 추가 
+        ImGui::TextColored(ImVec4(1, 0, 0, 0), u8"꼭 확인하고 찍자");
 
-
-        static _float3   vRotateAngle = {};
-        static _float3   vScale = { 1.f,1.f,1.f };
-
-
-        _bool     bChangeScale = false;
-
-        ImGui::Dummy(ImVec2(0.0f, 15.0f)); // 높이가 10인 빈 공간 추가
-
-        if (ImGui::SliderFloat("Scale X", &vScale.x, 1.f, 5.f))
-        {
-            bChangeScale = true;
-        }
-        if (ImGui::SliderFloat("Scale Y", &vScale.y, 1.f, 5.f))
-        {
-            bChangeScale = true;
-        }
-        if (ImGui::SliderFloat("Scale Z", &vScale.z, 1.f, 5.f))
-        {
-            bChangeScale = true;
-        }
-
-
-        if (nullptr != m_tPreViewObject.pTargetObject)
-        {
-            if (bChangeScale)
-                m_tPreViewObject.pTargetObject->Get_Transform()->Scaling(vScale.x, vScale.y, vScale.z);
-        }
+        if(ImGui::RadioButton(u8"Object SetType: Decorative", eObjectType == OBJECT_TYPE::DECORATIVE_OBJECT))
+            eObjectType = OBJECT_TYPE::DECORATIVE_OBJECT;
+        if (ImGui::RadioButton(u8"Object SetType: Static", eObjectType == OBJECT_TYPE::STATIC_OBJECT))
+            eObjectType = OBJECT_TYPE::STATIC_OBJECT;
+        if (ImGui::RadioButton(u8"Object SetType: Dynamic", eObjectType == OBJECT_TYPE::DYNAMIC_OBJECT))
+            eObjectType = OBJECT_TYPE::DYNAMIC_OBJECT;
+        
     }
     
    
@@ -688,26 +691,48 @@ void CLevel_MapTool::Second_ImGui_Render()
 
 
     string strNumTerrain = u8"Terrain Num: ";
-    string strNumCityObject = u8"CityObject Num: ";
-    string strNumMapObject = u8"MapObject Num: ";
+
+    string strDecorativeObject = u8"Decorative_Object Num: ";
+    string strStaticObject = u8"Static_Object Num: ";
+    string strDynamicObject = u8"Dynamic_Object Num: ";
+
 
     string strNumAnimObject = u8"(플레이어 포함)AnimObject Num: ";
     
 
 
     list<CGameObject*>& TerrainList = m_pGameInstance->Get_GameObjects(LEVELID::LEVEL_MAPTOOL, L"Layer_BackGround_Terrain");
-    list<CGameObject*>& MapObjectList = m_pGameInstance->Get_GameObjects(LEVELID::LEVEL_MAPTOOL, L"Layer_Map_Object");
+
+
+    list<CGameObject*>& DecorativeObjectList = m_pGameInstance->Get_GameObjects(LEVELID::LEVEL_MAPTOOL, L"Layer_Decorative_Object");
+    list<CGameObject*>& StaticObjectList = m_pGameInstance->Get_GameObjects(LEVELID::LEVEL_MAPTOOL, L"Layer_Static_Object");
+    list<CGameObject*>& DynamicObjectList = m_pGameInstance->Get_GameObjects(LEVELID::LEVEL_MAPTOOL, L"Layer_Dynamic_Object");
+
+   
 
     list<CGameObject*>& AnimObjectList = m_pGameInstance->Get_GameObjects(LEVELID::LEVEL_MAPTOOL, L"Layer_Anim_Object");
 
 
     _uint iNumTerrain = TerrainList.size();
-    _uint iNumMapObject = MapObjectList.size();
+
+    _uint iNumDecorativeObject = DecorativeObjectList.size();
+    _uint iNumStaticObject = StaticObjectList.size();
+    _uint iNumDynamicObject = DynamicObjectList.size();
+
     _uint iNumAnimObject = AnimObjectList.size() + 1;   // << 1은 플레이어를 의미 
 
 
     strNumTerrain += to_string(iNumTerrain);
-    strNumMapObject += to_string(iNumMapObject);
+
+   
+
+
+
+     
+    strDecorativeObject += to_string(iNumDecorativeObject);
+    strStaticObject += to_string(iNumStaticObject);
+    strDynamicObject += to_string(iNumDynamicObject);
+
     strNumAnimObject += to_string(iNumAnimObject);
 
  
@@ -715,9 +740,9 @@ void CLevel_MapTool::Second_ImGui_Render()
 
     ImGui::TextColored(ImVec4(1, 1, 0, 1), "CurLevel: LEVEL_MAPTOOL");
     ImGui::TextColored(ImVec4(1, 1, 1, 1), strNumTerrain.c_str());
-    ImGui::TextColored(ImVec4(1, 1, 1, 1), strNumCityObject.c_str());       // 얜 일단 걍 1개 다른 리소스 찾아보고 변경할수잇으면 하도록하자
-    ImGui::TextColored(ImVec4(1, 1, 1, 1), strNumMapObject.c_str());
-
+    ImGui::TextColored(ImVec4(1, 1, 1, 1), strDecorativeObject.c_str());       // 얜 일단 걍 1개 다른 리소스 찾아보고 변경할수잇으면 하도록하자
+    ImGui::TextColored(ImVec4(1, 1, 1, 1), strStaticObject.c_str());
+    ImGui::TextColored(ImVec4(1, 1, 1, 1), strDynamicObject.c_str());
 
     ImGui::Dummy(ImVec2(0.0f, 20.0f)); // 높이가 10인 빈 공간 추가
     ImGui::TextColored(ImVec4(0, 1, 0, 1), strNumAnimObject.c_str());
@@ -914,26 +939,26 @@ void CLevel_MapTool::Open_ObjectDialog()
         {
             MSG_BOX(TEXT("Failed Ready Obejcts"));
             assert(nullptr);
-        }        
+        }
         bFirstCall = true;
     }
-    
+
 
     ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
 
     _int iSelectObjectNum = -1;     // 선택 안했으면 -1 
 
 
-    if (ImGui::TreeNode("Kit")) 
-    {       
-        m_eObjectCheckType = OBJECT_CHECK_TYPE::KIT;
+    if (ImGui::TreeNode("Kit"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::KIT;
         ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
 
         static _uint   iSelectKit = 0;
-        for (size_t i = 0; i < m_iNumModelList[m_eObjectCheckType]; ++i)
+        for (size_t i = 0; i < 5; ++i)
         {
-            string label = "Kit" + std::to_string(i);         
-           
+            string label = "Kit" + std::to_string(i);
+
             if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
             {
                 iSelectKit = i;
@@ -942,16 +967,16 @@ void CLevel_MapTool::Open_ObjectDialog()
 
 
         iSelectObjectNum = iSelectKit;
-        ImGui::TreePop(); 
+        ImGui::TreePop();
     }
 
     else if (ImGui::TreeNode("Debris"))
     {
-        m_eObjectCheckType = OBJECT_CHECK_TYPE::DEBRIS;
+        m_eModelCheckType = MODEL_CHECK_LIST::DEBRIS;
         ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
 
         static _uint   iSelectKit = 0;
-        for (size_t i = 0; i < m_iNumModelList[m_eObjectCheckType]; ++i)
+        for (size_t i = 0; i < 2; ++i)
         {
             string label = "Debris" + std::to_string(i);
 
@@ -966,13 +991,381 @@ void CLevel_MapTool::Open_ObjectDialog()
         ImGui::TreePop();
     }
 
-    else if (ImGui::TreeNode("Sign"))
+
+    else if (ImGui::TreeNode("Barricade"))
     {
-        m_eObjectCheckType = OBJECT_CHECK_TYPE::SIGN;
+        m_eModelCheckType = MODEL_CHECK_LIST::BARRICADE;
         ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
 
         static _uint   iSelectKit = 0;
-        for (size_t i = 0; i < m_iNumModelList[m_eObjectCheckType]; ++i)
+        for (size_t i = 0; i < 3; ++i)
+        {
+            string label = "Barricade" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+    else if (ImGui::TreeNode("Billboard"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::BILLBOARD;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 12; ++i)
+        {
+            string label = "Billboard" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+    else if (ImGui::TreeNode("Boss_Fight1"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::BOSS_FIGHT1;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 21; ++i)
+        {
+            string label = "Boss_Fight1_" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+    else if (ImGui::TreeNode("Boss_Fight3"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::BOSS_FIGHT3;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 2; ++i)
+        {
+            string label = "Boss_Fight3_" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+    else if (ImGui::TreeNode("CatWalk"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::CATWALK;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 6; ++i)
+        {
+            string label = "CatWalk" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+    else if (ImGui::TreeNode("Crane"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::CRANE;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 3; ++i)
+        {
+            string label = "Crane" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+    else if (ImGui::TreeNode("CyberCity"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::CYBERCITY;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 4; ++i)
+        {
+            string label = "CyberCity" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+
+    else if (ImGui::TreeNode("Deco"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::DECO;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 6; ++i)
+        {
+            string label = "Deco" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+
+
+    else if (ImGui::TreeNode("Fan"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::FAN;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 1; ++i)
+        {
+            string label = "Fan" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+
+    else if (ImGui::TreeNode("Industrial_Elevator"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::INDUSTRIAL_ELEVATOR;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 1; ++i)
+        {
+            string label = "Industrial_Elevator" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+
+
+    else if (ImGui::TreeNode("Lamp"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::LAMP;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 4; ++i)
+        {
+            string label = "Lamp" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+
+    else if (ImGui::TreeNode("Pipe"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::PIPE;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 7; ++i)
+        {
+            string label = "Pipe" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+
+
+    else if (ImGui::TreeNode("Platform"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::PLATFORM;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 4; ++i)
+        {
+            string label = "Platform" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+
+    else if (ImGui::TreeNode("RotationFan"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::ROTATIONFAN;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 1; ++i)
+        {
+            string label = "RotationFan" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+
+
+    else if (ImGui::TreeNode("Train"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::TRAIN;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 3; ++i)
+        {
+            string label = "Train" + std::to_string(i);
+
+            if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+            {
+                iSelectKit = i;
+            }
+        }
+
+        iSelectObjectNum = iSelectKit;
+        ImGui::TreePop();
+    }
+
+    else if (ImGui::TreeNode("BodyBag"))
+    {
+    m_eModelCheckType = MODEL_CHECK_LIST::BODYBAG;
+    ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+    static _uint   iSelectKit = 0;
+    for (size_t i = 0; i < 2; ++i)
+    {
+        string label = "BodyBag" + std::to_string(i);
+
+        if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+        {
+            iSelectKit = i;
+        }
+    }
+
+    iSelectObjectNum = iSelectKit;
+    ImGui::TreePop();
+    }
+
+
+    else if (ImGui::TreeNode("ClimbObject"))
+    {
+    m_eModelCheckType = MODEL_CHECK_LIST::CLIMBOBJECT;
+    ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+    static _uint   iSelectKit = 0;
+    for (size_t i = 0; i < 1; ++i)
+    {
+        string label = "ClimbObject" + std::to_string(i);
+
+        if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
+        {
+            iSelectKit = i;
+        }
+    }
+
+    iSelectObjectNum = iSelectKit;
+    ImGui::TreePop();
+    }
+
+
+    else if (ImGui::TreeNode("Sign"))
+    {
+        m_eModelCheckType = MODEL_CHECK_LIST::SIGN;
+        ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
+
+        static _uint   iSelectKit = 0;
+        for (size_t i = 0; i < 6; ++i)
         {
             string label = "Sign" + std::to_string(i);
 
@@ -989,11 +1382,11 @@ void CLevel_MapTool::Open_ObjectDialog()
 
     else if (ImGui::TreeNode("Wall"))
     {
-        m_eObjectCheckType = OBJECT_CHECK_TYPE::WALL;
+        m_eModelCheckType = MODEL_CHECK_LIST::WALL;
         ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
 
         static _uint   iSelectKit = 0;
-        for (size_t i = 0; i < m_iNumModelList[m_eObjectCheckType]; ++i)
+        for (size_t i = 0; i < 3; ++i)
         {
             string label = "Wall" + std::to_string(i);
 
@@ -1010,11 +1403,11 @@ void CLevel_MapTool::Open_ObjectDialog()
 
     else if (ImGui::TreeNode("Russian_Sign"))
     {
-        m_eObjectCheckType = OBJECT_CHECK_TYPE::RUSSIAN_SIGN;
+        m_eModelCheckType = MODEL_CHECK_LIST::RUSSIAN_SIGN;
         ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
 
         static _uint   iSelectKit = 0;
-        for (size_t i = 0; i < m_iNumModelList[m_eObjectCheckType]; ++i)
+        for (size_t i = 0; i < 11; ++i)
         {
             string label = "Russian_Sign" + std::to_string(i);
 
@@ -1031,14 +1424,13 @@ void CLevel_MapTool::Open_ObjectDialog()
 
 
 
-
     else if (ImGui::TreeNode("City"))
     {
-        m_eObjectCheckType = OBJECT_CHECK_TYPE::CITY;
+        m_eModelCheckType = MODEL_CHECK_LIST::CITY;
         ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
 
         static _uint   iSelectKit = 0;
-        for (size_t i = 0; i < m_iNumModelList[m_eObjectCheckType]; ++i)
+        for (size_t i = 0; i < 1; ++i)
         {
             string label = "City" + std::to_string(i);
 
@@ -1052,13 +1444,15 @@ void CLevel_MapTool::Open_ObjectDialog()
         ImGui::TreePop();
     }
 
+
+
     else if (ImGui::TreeNode("Building"))
     {
-        m_eObjectCheckType = OBJECT_CHECK_TYPE::BUILDING;
+        m_eModelCheckType = MODEL_CHECK_LIST::BUILDING;
         ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
 
         static _uint   iSelectKit = 0;
-        for (size_t i = 0; i < m_iNumModelList[m_eObjectCheckType]; ++i)
+        for (size_t i = 0; i < 5; ++i)
         {
             string label = "Building" + std::to_string(i);
 
@@ -1073,15 +1467,15 @@ void CLevel_MapTool::Open_ObjectDialog()
     }
 
 
-    else if (ImGui::TreeNode("Monster"))
+    else if (ImGui::TreeNode("Wire"))
     {
-        m_eObjectCheckType = OBJECT_CHECK_TYPE::MONSTER;
+        m_eModelCheckType = MODEL_CHECK_LIST::WIRE;
         ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
 
         static _uint   iSelectKit = 0;
-        for (size_t i = 0; i < m_iNumModelList[m_eObjectCheckType]; ++i)
+        for (size_t i = 0; i < 3; ++i)
         {
-            string label = "Monster" + std::to_string(i);
+            string label = "Wire" + std::to_string(i);
 
             if (ImGui::RadioButton(label.c_str(), iSelectKit == i))
             {
@@ -1094,27 +1488,66 @@ void CLevel_MapTool::Open_ObjectDialog()
     }
 
 
-    else if (ImGui::TreeNode("ETC...."))
+   
+
+    else if (ImGui::TreeNode("Monster"))
     {
-        m_eObjectCheckType = OBJECT_CHECK_TYPE::ETC;
+       
         ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
 
+        static _uint   iSelectKit = 0;
 
-        _uint   iSelectETC = 0;
-        for (size_t i = 0; i < m_iNumModelList[m_eObjectCheckType]; ++i)
+
+        //m_eModelCheckType = MODEL_CHECK_LIST::SPIDER;
+
+        string label = "Spider";
+        if (ImGui::RadioButton(label.c_str(), iSelectKit == 0))
         {
-            string label = "ETC_" + std::to_string(i);
-
-            if (ImGui::RadioButton(label.c_str(), iSelectETC == i))
-            {
-                iSelectETC = i;
-            }
-
+            m_eModelCheckType = MODEL_CHECK_LIST::SPIDER;
+            iSelectKit = 0;
         }
 
-        iSelectObjectNum = iSelectETC;
+        label = "Elite";
+        if (ImGui::RadioButton(label.c_str(), iSelectKit == 1))
+        {
+            m_eModelCheckType = MODEL_CHECK_LIST::ELITE;
+            iSelectKit = 1;
+        }
+
+        label = "Jetpack";
+        if (ImGui::RadioButton(label.c_str(), iSelectKit == 2))
+        {
+            m_eModelCheckType = MODEL_CHECK_LIST::JETPACK;
+            iSelectKit = 2;
+        }
+
+        label = "Mira";
+        if (ImGui::RadioButton(label.c_str(), iSelectKit == 3))
+        {
+            m_eModelCheckType = MODEL_CHECK_LIST::MIRA;
+            iSelectKit = 3;
+        }
+
+        label = "Pistol";
+        if (ImGui::RadioButton(label.c_str(), iSelectKit == 4))
+        {
+            m_eModelCheckType = MODEL_CHECK_LIST::PISTOL;
+            iSelectKit = 4;
+        }
+
+        label = "Sniper";
+        if (ImGui::RadioButton(label.c_str(), iSelectKit == 5))
+        {
+            m_eModelCheckType = MODEL_CHECK_LIST::SNIPER;
+            iSelectKit = 5;
+        }
+        
+      
+
+        iSelectObjectNum = iSelectKit;
         ImGui::TreePop();
     }
+
 
 
 
@@ -1295,13 +1728,15 @@ HRESULT CLevel_MapTool::Create_PreViewObject(_int iSelectObjectNum)
         return S_OK;
 
     
-    static OBJECT_CHECK_TYPE ePreObjectCheckType = OBJECT_CHECK_TYPE::OBJECT_CHECK_TYPE_END;
+    static OBJECT_TYPE       ePreObjectCheckType = OBJECT_TYPE::OBJECT_TYPE_END;
+    static MODEL_CHECK_LIST  ePreModelCheckType = MODEL_CHECK_LIST::MODEL_CHECK_TYPE_END;
     static _int              iPreObjectSelectNum = -1;
 
    
     if (m_bIsCreatePrewViewObject == true &&
-        ePreObjectCheckType == m_eObjectCheckType &&
-        iPreObjectSelectNum == iSelectObjectNum)
+        ePreModelCheckType == m_eModelCheckType &&
+        iPreObjectSelectNum == iSelectObjectNum &&
+        ePreObjectCheckType == eObjectType)
         return S_OK;
       
 
@@ -1311,38 +1746,48 @@ HRESULT CLevel_MapTool::Create_PreViewObject(_int iSelectObjectNum)
     _wstring strPrototypeName = L"";
   
 
-    switch (m_eObjectCheckType)
+    // 모델체크타입에 나누는게 아니라 
+    // 내가선택한 객체의 클래스 타입으로 나눈다.
+
+
+
+    switch (eObjectType)
     {
-    case Client::CLevel_MapTool::KIT:
-        strPrototypeName = TEXT("Prototype_GameObject_KitObject");
+    case OBJECT_TYPE::DECORATIVE_OBJECT:
+        strPrototypeName = TEXT("Prototype_GameObject_Decorative_Object");
         break;
-    case Client::CLevel_MapTool::DEBRIS:
-        strPrototypeName = TEXT("Prototype_GameObject_DebrisObject");
+    case OBJECT_TYPE::STATIC_OBJECT:
+        strPrototypeName = TEXT("Prototype_GameObject_Static_Object");
         break;
-    case Client::CLevel_MapTool::SIGN:
-        strPrototypeName = TEXT("Prototype_GameObject_SignObject");
+    case OBJECT_TYPE::DYNAMIC_OBJECT:
+        strPrototypeName = TEXT("Prototype_GameObject_Dynamic_Object");
         break;
-    case Client::CLevel_MapTool::WALL:
-        strPrototypeName = TEXT("Prototype_GameObject_WallObject");
+
+    default:    // 임시로 여까지 만
         break;
-    case Client::CLevel_MapTool::RUSSIAN_SIGN:
-        strPrototypeName = TEXT("Prototype_GameObject_Russian_SignObject");
-        break;
-    case Client::CLevel_MapTool::CITY:
-        strPrototypeName = TEXT("Prototype_GameObject_CityObject");
-        break;
-    case Client::CLevel_MapTool::BUILDING:
-        strPrototypeName = TEXT("Prototype_GameObject_BuildingObject");
-        break;
-    case Client::CLevel_MapTool::MONSTER:
+    }
+
+
+    switch (m_eModelCheckType)      // 객체원형의 플토타입 이름
     {
-        // 분기한번 더 들어가야할듯 ?  ex) 어떤 몬스터냐 ?    일단 임시로 거미몬스터만
-        strPrototypeName = TEXT("Prototype_GameObject_Monster_Spider");
-    }    
+    case Client::CLevel_MapTool::SPIDER:
+        strPrototypeName = TEXT("Prototype_GameObject_Spider");
         break;
-    case Client::CLevel_MapTool::ETC:
+    case Client::CLevel_MapTool::ELITE:
+        strPrototypeName = TEXT("Prototype_GameObject_Elite");
         break;
-    case Client::CLevel_MapTool::OBJECT_CHECK_TYPE_END:
+    case Client::CLevel_MapTool::JETPACK:
+        strPrototypeName = TEXT("Prototype_GameObject_Jetpack");
+        break;
+
+    case Client::CLevel_MapTool::MIRA:
+        strPrototypeName = TEXT("Prototype_GameObject_Mira");
+        break;
+    case Client::CLevel_MapTool::PISTOL:
+        strPrototypeName = TEXT("Prototype_GameObject_Pistol");
+        break;
+    case Client::CLevel_MapTool::SNIPER:
+        strPrototypeName = TEXT("Prototype_GameObject_Sniper");
         break;
     default:
         break;
@@ -1356,7 +1801,7 @@ HRESULT CLevel_MapTool::Create_PreViewObject(_int iSelectObjectNum)
     Desc.fRotationPerSec = 20.f;
     Desc.fSpeedPerSec = 20.f;
     Desc.iModelNum = iSelectObjectNum;
-    Desc.iObjectType = m_eObjectCheckType;
+    Desc.iModelListType = m_eModelCheckType;
 
     // 처음 만들어지는 거니?
     if (!m_bIsCreatePrewViewObject)
@@ -1365,11 +1810,13 @@ HRESULT CLevel_MapTool::Create_PreViewObject(_int iSelectObjectNum)
             assert(nullptr);
 
         m_bIsCreatePrewViewObject = true;
-        ePreObjectCheckType = m_eObjectCheckType;
+
+        ePreObjectCheckType = eObjectType;
+        ePreModelCheckType = m_eModelCheckType;
         iPreObjectSelectNum = iSelectObjectNum;
     }
     // 이전에 체크했던거랑 지금 체크한게 다르거나 Or 내가 선택한 오브젝트의 모델넘버가 다르니?
-    else if (ePreObjectCheckType != m_eObjectCheckType || iPreObjectSelectNum != iSelectObjectNum)
+    else if (ePreModelCheckType != m_eModelCheckType || iPreObjectSelectNum != iSelectObjectNum || ePreObjectCheckType != eObjectType)
     {
         //  미리보기 오브젝트가 바뀌어야하는 시점
         //  내가 선택한 오브젝트의 타입이 달라, Or 내가 선택한 오브젝트의 타입은 같은데 내가 선택한 모델이 다를경우 ex) 같은 Kit오브젝트여도
@@ -1382,7 +1829,8 @@ HRESULT CLevel_MapTool::Create_PreViewObject(_int iSelectObjectNum)
         if (FAILED(m_pGameInstance->Add_CloneObject_ToLayer(LEVEL_MAPTOOL, strLayerName, strPrototypeName, &Desc)))
             assert(nullptr);
 
-        ePreObjectCheckType = m_eObjectCheckType;
+        ePreObjectCheckType = eObjectType;
+        ePreModelCheckType = m_eModelCheckType;
         iPreObjectSelectNum = iSelectObjectNum;
     }
 
@@ -1398,43 +1846,66 @@ HRESULT CLevel_MapTool::Create_PreViewObject(_int iSelectObjectNum)
 
 HRESULT CLevel_MapTool::Create_Object()
 {
-    _wstring strLayerName = L"Layer_Map_Object";
+    _wstring strLayerName = L"";
     _wstring strPrototypeName = m_tPreViewObject.pTargetObject->Get_PrototypeName();
 
-    switch (m_eObjectCheckType)
-    {
-    case Client::CLevel_MapTool::KIT:       
-        break;
-    case Client::CLevel_MapTool::DEBRIS:
-        break;
-    case Client::CLevel_MapTool::SIGN:       
-        break;
-    case Client::CLevel_MapTool::WALL:
-        break;
-    case Client::CLevel_MapTool::RUSSIAN_SIGN:
-        break;
-    case Client::CLevel_MapTool::CITY:
-        break;
-    case Client::CLevel_MapTool::BUILDING:
-        break;
-    case Client::CLevel_MapTool::MONSTER:
-    {
-        strLayerName = L"Layer_Anim_Object";
-    }
-        break;
 
-    case Client::CLevel_MapTool::ETC:
+    switch (eObjectType)
+    {
+    case Client::CLevel_MapTool::DECORATIVE_OBJECT:
+        strLayerName = L"Layer_Decorative_Object";
         break;
-    case Client::CLevel_MapTool::OBJECT_CHECK_TYPE_END:
+    case Client::CLevel_MapTool::STATIC_OBJECT:
+        strLayerName = L"Layer_Static_Object";
+        break;
+    case Client::CLevel_MapTool::DYNAMIC_OBJECT:
+        strLayerName = L"Layer_Dynamic_Object";
+        break;
+    case Client::CLevel_MapTool::OBJECT_TYPE_END:
         break;
     default:
         break;
     }
 
+
+
+    switch (m_eModelCheckType)
+    {
+    case Client::CLevel_MapTool::SPIDER:
+        strLayerName = L"Layer_Anim_Object";
+        break;
+    case Client::CLevel_MapTool::ELITE:
+        strLayerName = L"Layer_Anim_Object";
+        break;
+    case Client::CLevel_MapTool::JETPACK:
+        strLayerName = L"Layer_Anim_Object";
+        break;
+
+    case Client::CLevel_MapTool::MIRA:
+        strLayerName = L"Layer_Anim_Object";
+        break;
+    case Client::CLevel_MapTool::PISTOL:
+        strLayerName = L"Layer_Anim_Object";
+        break;
+    case Client::CLevel_MapTool::SNIPER:
+        strLayerName = L"Layer_Anim_Object";
+        break;
+
+    default:
+        break;
+    }
+
+
+  
+
+
+
+
     CGameObject::GAMEOBJECT_DESC* Desc = nullptr;
     Desc = static_cast<CGameObject::GAMEOBJECT_DESC*>(m_tPreViewObject.pAdditionInfo);
     Desc->InitWorldMatrix = m_tPreViewObject.pTargetObject->Get_Transform()->Get_WorldMatrix();
-    Desc->iObjectType = m_eObjectCheckType; // 키트 ,파편 , 등등
+    Desc->iModelListType = m_eModelCheckType; // 키트 ,파편 , 등등
+    Desc->iObjectType = eObjectType;
 
     if (FAILED(m_pGameInstance->Add_CloneObject_ToLayer(LEVEL_MAPTOOL, strLayerName, strPrototypeName, Desc)))
         assert(nullptr);
@@ -1449,16 +1920,68 @@ _bool CLevel_MapTool::IsPicking_ByObjects(CGameObject** pOut)
 {
     _float3     vPickPos = {};
 
-    list<CGameObject*>& MapObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Map_Object");
 
-    for (auto pGameObj : MapObjects)
+
+    list<CGameObject*>& AnimObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Anim_Object");
+    for (auto pAnimObj : AnimObjects)
+    {
+        CModel* pModel = dynamic_cast<CModel*>(pAnimObj->Find_Component(L"Com_Model"));
+        vector<CMesh*>& vecMeshs = pModel->Get_Meshes();
+
+        for (size_t i = 0; i < vecMeshs.size(); i++)
+        {
+            if (vecMeshs[i]->isPicking(pAnimObj->Get_Transform()->Get_WorldMatrix(), &vPickPos))
+            {
+                // 해당 모델의 메쉬중 하나라도 피킹을 했다면
+
+                *pOut = pAnimObj;
+                return true;            // 오브젝트 우선순위 피킹했니? 물어보고 피킹안햇으면 터레인 물어봐 
+            }
+        }
+    }
+
+
+    list<CGameObject*>& DynamicObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Dynamic_Object");
+    for (auto pGameObj : DynamicObjects)
     {
         if (true == g_PickingCity)
         {
-            CLevel_MapTool::OBJECT_CHECK_TYPE eType = (CLevel_MapTool::OBJECT_CHECK_TYPE)pGameObj->Get_ObjectType();
+            CLevel_MapTool::MODEL_CHECK_LIST eType = (CLevel_MapTool::MODEL_CHECK_LIST)pGameObj->Get_ModelListType();
 
-            if (CLevel_MapTool::OBJECT_CHECK_TYPE::CITY == eType ||
-                CLevel_MapTool::OBJECT_CHECK_TYPE::BUILDING == eType)
+            if (CLevel_MapTool::MODEL_CHECK_LIST::CITY == eType ||
+                CLevel_MapTool::MODEL_CHECK_LIST::BUILDING == eType)
+            {
+                continue;
+            }
+        }
+
+        CModel* pModel = dynamic_cast<CModel*>(pGameObj->Find_Component(L"Com_Model"));
+        vector<CMesh*>& vecMeshs = pModel->Get_Meshes();
+
+        for (size_t i = 0; i < vecMeshs.size(); i++)
+        {
+            if (vecMeshs[i]->isPicking(pGameObj->Get_Transform()->Get_WorldMatrix(), &vPickPos))
+            {
+                // 해당 모델의 메쉬중 하나라도 피킹을 했다면
+
+                *pOut = pGameObj;
+                return true;            // 오브젝트 우선순위 피킹했니? 물어보고 피킹안햇으면 터레인 물어봐 
+            }
+        }
+    }
+
+
+
+
+    list<CGameObject*>& DecorativeObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Decorative_Object");
+    for (auto pGameObj : DecorativeObjects)
+    {
+        if (true == g_PickingCity)
+        {
+            CLevel_MapTool::MODEL_CHECK_LIST eType = (CLevel_MapTool::MODEL_CHECK_LIST)pGameObj->Get_ModelListType();
+
+            if (CLevel_MapTool::MODEL_CHECK_LIST::CITY == eType ||
+                CLevel_MapTool::MODEL_CHECK_LIST::BUILDING == eType)
             {
                 continue;
             }           
@@ -1480,25 +2003,45 @@ _bool CLevel_MapTool::IsPicking_ByObjects(CGameObject** pOut)
     }
 
 
-
-    list<CGameObject*>& AnimObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Anim_Object");
-
-    for (auto pAnimObj : AnimObjects)
+    list<CGameObject*>& StaticObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Static_Object");
+    for (auto pGameObj : StaticObjects)
     {
-        CModel* pModel = dynamic_cast<CModel*>(pAnimObj->Find_Component(L"Com_Model"));
+        if (true == g_PickingCity)
+        {
+            CLevel_MapTool::MODEL_CHECK_LIST eType = (CLevel_MapTool::MODEL_CHECK_LIST)pGameObj->Get_ModelListType();
+
+            if (CLevel_MapTool::MODEL_CHECK_LIST::CITY == eType ||
+                CLevel_MapTool::MODEL_CHECK_LIST::BUILDING == eType)
+            {
+                continue;
+            }
+        }
+
+        CModel* pModel = dynamic_cast<CModel*>(pGameObj->Find_Component(L"Com_Model"));
         vector<CMesh*>& vecMeshs = pModel->Get_Meshes();
 
         for (size_t i = 0; i < vecMeshs.size(); i++)
         {
-            if (vecMeshs[i]->isPicking(pAnimObj->Get_Transform()->Get_WorldMatrix(), &vPickPos))
+            if (vecMeshs[i]->isPicking(pGameObj->Get_Transform()->Get_WorldMatrix(), &vPickPos))
             {
                 // 해당 모델의 메쉬중 하나라도 피킹을 했다면
 
-                *pOut = pAnimObj;
+                *pOut = pGameObj;
                 return true;            // 오브젝트 우선순위 피킹했니? 물어보고 피킹안햇으면 터레인 물어봐 
             }
         }
     }
+
+
+   
+
+
+
+
+
+
+
+  
 
     
 
@@ -1529,65 +2072,22 @@ _bool CLevel_MapTool::IsPicking_ByObjects(CGameObject** pOut)
 
 
 HRESULT CLevel_MapTool::Ready_Object()
-{
-    // 모델 갯수입니다.
-    m_iNumModelList[OBJECT_CHECK_TYPE::KIT] = 5;              // 모델 갯수입니다.
+{  
+    // 오브젝트의 원형 ex) 스태틱옵젝, 다이나믹옵젝, 데코, 기타 등등..
 
-    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_KitObject"),
-        CAid_props::Create(m_pDevice, m_pContext))))
+    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Decorative_Object"),
+        CDecorative_Object::Create(m_pDevice, m_pContext))))
+        return E_FAIL;
+
+    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Static_Object"),
+        CStatic_Object::Create(m_pDevice, m_pContext))))
+        return E_FAIL;
+   
+    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Dynamic_Object"),
+        CDynamic_Object::Create(m_pDevice, m_pContext))))
         return E_FAIL;
 
 
-    m_iNumModelList[OBJECT_CHECK_TYPE::DEBRIS] = 2;         // 파편  
-
-    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_DebrisObject"),
-        CAid_props::Create(m_pDevice, m_pContext))))
-        return E_FAIL;
-
-
-
-    m_iNumModelList[OBJECT_CHECK_TYPE::SIGN] = 6;         // 간판 
-
-    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_SignObject"),
-        CAid_props::Create(m_pDevice, m_pContext))))
-        return E_FAIL;
-
-
-    m_iNumModelList[OBJECT_CHECK_TYPE::WALL] = 3;          // 벽 간판  
-
-    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_WallObject"),
-        CAid_props::Create(m_pDevice, m_pContext))))
-        return E_FAIL;
-
-
-    m_iNumModelList[OBJECT_CHECK_TYPE::RUSSIAN_SIGN] = 11;   // 글자 간판  
-
-    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Russian_SignObject"),
-        CAid_props::Create(m_pDevice, m_pContext))))
-        return E_FAIL;
-
-
-
-
-    m_iNumModelList[OBJECT_CHECK_TYPE::CITY] = 1;       // 시티
-  
-    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_CityObject"),
-        CBuilding::Create(m_pDevice, m_pContext))))
-        return E_FAIL;
-
-
-    m_iNumModelList[OBJECT_CHECK_TYPE::BUILDING] = 5;   // 빌딩
-
-    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_BuildingObject"),
-        CBuilding::Create(m_pDevice, m_pContext))))
-        return E_FAIL;
-
-
-    m_iNumModelList[OBJECT_CHECK_TYPE::MONSTER] = 1;   // 몬스터
-
-    if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Monster_Spider"),
-        CSpider::Create(m_pDevice, m_pContext))))
-        return E_FAIL;
 
 
 
@@ -1662,19 +2162,20 @@ void CLevel_MapTool::Save_NonAnimObject()
         return;
     }
 
-    list<CGameObject*>& GameObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Map_Object");
 
-    _uint iObjectCount = GameObjects.size();
+    list<CGameObject*>& DecorativeObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Decorative_Object");
+
+    _uint iObjectCount = DecorativeObjects.size();
     fwrite(&iObjectCount, sizeof(iObjectCount), 1, fout);  // 오브젝트의 갯수 저장
 
-    for (auto pGameObj : GameObjects)
+    for (auto pGameObj : DecorativeObjects)
     {
         _wstring wstrMyPrototypeName = pGameObj->Get_PrototypeName();
         _wstring wstrMyLayerName = pGameObj->Get_LayerName();
         CModel* pModel = pGameObj->Get_Model();
 
         // GameObject 저장
-        _uint objectType = pGameObj->Get_ObjectType();
+        _uint objectType = pGameObj->Get_ModelListType();
         fwrite(&objectType, sizeof(objectType), 1, fout);
 
         std::string prototypeName = wstringToString(wstrMyPrototypeName);
@@ -1780,6 +2281,259 @@ void CLevel_MapTool::Save_NonAnimObject()
         fwrite(&WorldMatrix, sizeof(WorldMatrix), 1, fout);
     }
 
+
+
+
+    list<CGameObject*>& StaticObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Static_Object");
+
+    iObjectCount = StaticObjects.size();
+    fwrite(&iObjectCount, sizeof(iObjectCount), 1, fout);  // 오브젝트의 갯수 저장
+
+    for (auto pGameObj : StaticObjects)
+    {
+        _wstring wstrMyPrototypeName = pGameObj->Get_PrototypeName();
+        _wstring wstrMyLayerName = pGameObj->Get_LayerName();
+        CModel* pModel = pGameObj->Get_Model();
+
+        // GameObject 저장
+        _uint objectType = pGameObj->Get_ModelListType();
+        fwrite(&objectType, sizeof(objectType), 1, fout);
+
+        std::string prototypeName = wstringToString(wstrMyPrototypeName);
+        std::string layerName = wstringToString(wstrMyLayerName);
+
+        _uint prototypeNameSize = prototypeName.size();
+        _uint layerNameSize = layerName.size();
+
+        fwrite(&prototypeNameSize, sizeof(prototypeNameSize), 1, fout);
+        fwrite(prototypeName.c_str(), prototypeNameSize, 1, fout);
+
+        fwrite(&layerNameSize, sizeof(layerNameSize), 1, fout);
+        fwrite(layerName.c_str(), layerNameSize, 1, fout);
+
+        // Model 저장
+        std::string modelPrototypeName = wstringToString(pModel->Get_PrototypeName());
+
+        _uint modelType = pModel->Get_ModelType();
+        std::string modelFilePath = wstringToString(pModel->Get_m_strModelFilePath());
+
+        _uint modelPrototypeNameSize = modelPrototypeName.size();
+        _uint modelFilePathSize = modelFilePath.size();
+
+        _uint meshCount = pModel->Get_MeshesCount();
+        _uint materialsCount = pModel->Get_MaterialsCount();
+
+        _float4x4 PreTransformMatrix = pModel->Get_PreTransformMatrix();
+        fwrite(&PreTransformMatrix, sizeof(PreTransformMatrix), 1, fout);
+
+        fwrite(&modelPrototypeNameSize, sizeof(modelPrototypeNameSize), 1, fout);
+        fwrite(modelPrototypeName.c_str(), modelPrototypeNameSize, 1, fout);
+
+        fwrite(&modelType, sizeof(modelType), 1, fout);
+
+        fwrite(&modelFilePathSize, sizeof(modelFilePathSize), 1, fout); // fbx 파일 경로 크기
+        fwrite(modelFilePath.c_str(), modelFilePathSize, 1, fout);
+
+        fwrite(&meshCount, sizeof(meshCount), 1, fout);
+        fwrite(&materialsCount, sizeof(materialsCount), 1, fout);
+
+        for (size_t i = 0; i < materialsCount; i++)
+        {
+            _wstring* pwstrMaterialTexturePath = pModel->Get_MaterialTexturePath(i);
+
+            for (size_t j = 0; j < AI_TEXTURE_TYPE_MAX; j++)
+            {
+                std::string materialTexturePath = wstringToString(pwstrMaterialTexturePath[j]);
+                _uint pathSize = materialTexturePath.size();
+                if (pathSize == 0)
+                {
+                    std::string noPath = "NO_PATH";
+                    _uint noPathSize = noPath.size();
+
+                    fwrite(&noPathSize, sizeof(noPathSize), 1, fout);
+                    fwrite(noPath.c_str(), noPathSize, 1, fout);
+                }
+                else
+                {
+                    fwrite(&pathSize, sizeof(pathSize), 1, fout);
+                    fwrite(materialTexturePath.c_str(), pathSize, 1, fout);
+                }
+            }
+        }
+
+        vector<CMesh*>& vecMesh = pModel->Get_Meshes();
+        for (size_t i = 0; i < vecMesh.size(); i++)
+        {
+            _uint materialIndex = vecMesh[i]->Get_MaterialIndex();
+            _uint numVertices = vecMesh[i]->m_iNumVertices;
+            _uint vertexStride = vecMesh[i]->m_iVertexStride;
+
+            fwrite(&materialIndex, sizeof(materialIndex), 1, fout);
+            fwrite(&numVertices, sizeof(numVertices), 1, fout);
+            fwrite(&vertexStride, sizeof(vertexStride), 1, fout);
+
+            VTXMESH* pVertices = vecMesh[i]->Get_Vertices();
+            for (size_t j = 0; j < numVertices; j++)
+            {
+                fwrite(&pVertices[j].vPosition, sizeof(pVertices[j].vPosition), 1, fout);
+                fwrite(&pVertices[j].vNormal, sizeof(pVertices[j].vNormal), 1, fout);
+                fwrite(&pVertices[j].vTexcoord, sizeof(pVertices[j].vTexcoord), 1, fout);
+                fwrite(&pVertices[j].vTangent, sizeof(pVertices[j].vTangent), 1, fout);
+            }
+
+            _uint numIndices = vecMesh[i]->m_iNumIndices;
+            _uint indexStride = vecMesh[i]->m_iIndexStride;
+            fwrite(&numIndices, sizeof(numIndices), 1, fout);
+            fwrite(&indexStride, sizeof(indexStride), 1, fout);
+
+            _uint* pIndices = vecMesh[i]->Get_Indices();
+            fwrite(pIndices, sizeof(_uint), numIndices, fout);
+
+            fwrite(&vecMesh[i]->m_eIndexFormat, sizeof(vecMesh[i]->m_eIndexFormat), 1, fout);
+            fwrite(&vecMesh[i]->m_eTopology, sizeof(vecMesh[i]->m_eTopology), 1, fout);
+
+            fwrite(&vecMesh[i]->Get_MinPos(), sizeof(vecMesh[i]->Get_MinPos()), 1, fout);
+            fwrite(&vecMesh[i]->Get_MaxPos(), sizeof(vecMesh[i]->Get_MaxPos()), 1, fout);
+        }
+
+        _float4x4 WorldMatrix = {};
+        XMStoreFloat4x4(&WorldMatrix, pGameObj->Get_Transform()->Get_WorldMatrix());
+
+        fwrite(&WorldMatrix, sizeof(WorldMatrix), 1, fout);
+    }
+
+
+
+
+
+    list<CGameObject*>& DynamicObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Dynamic_Object");
+
+    iObjectCount = DynamicObjects.size();
+    fwrite(&iObjectCount, sizeof(iObjectCount), 1, fout);  // 오브젝트의 갯수 저장
+
+    for (auto pGameObj : DynamicObjects)
+    {
+        _wstring wstrMyPrototypeName = pGameObj->Get_PrototypeName();
+        _wstring wstrMyLayerName = pGameObj->Get_LayerName();
+        CModel* pModel = pGameObj->Get_Model();
+
+        // GameObject 저장
+        _uint objectType = pGameObj->Get_ModelListType();
+        fwrite(&objectType, sizeof(objectType), 1, fout);
+
+        std::string prototypeName = wstringToString(wstrMyPrototypeName);
+        std::string layerName = wstringToString(wstrMyLayerName);
+
+        _uint prototypeNameSize = prototypeName.size();
+        _uint layerNameSize = layerName.size();
+
+        fwrite(&prototypeNameSize, sizeof(prototypeNameSize), 1, fout);
+        fwrite(prototypeName.c_str(), prototypeNameSize, 1, fout);
+
+        fwrite(&layerNameSize, sizeof(layerNameSize), 1, fout);
+        fwrite(layerName.c_str(), layerNameSize, 1, fout);
+
+        // Model 저장
+        std::string modelPrototypeName = wstringToString(pModel->Get_PrototypeName());
+
+        _uint modelType = pModel->Get_ModelType();
+        std::string modelFilePath = wstringToString(pModel->Get_m_strModelFilePath());
+
+        _uint modelPrototypeNameSize = modelPrototypeName.size();
+        _uint modelFilePathSize = modelFilePath.size();
+
+        _uint meshCount = pModel->Get_MeshesCount();
+        _uint materialsCount = pModel->Get_MaterialsCount();
+
+        _float4x4 PreTransformMatrix = pModel->Get_PreTransformMatrix();
+        fwrite(&PreTransformMatrix, sizeof(PreTransformMatrix), 1, fout);
+
+        fwrite(&modelPrototypeNameSize, sizeof(modelPrototypeNameSize), 1, fout);
+        fwrite(modelPrototypeName.c_str(), modelPrototypeNameSize, 1, fout);
+
+        fwrite(&modelType, sizeof(modelType), 1, fout);
+
+        fwrite(&modelFilePathSize, sizeof(modelFilePathSize), 1, fout); // fbx 파일 경로 크기
+        fwrite(modelFilePath.c_str(), modelFilePathSize, 1, fout);
+
+        fwrite(&meshCount, sizeof(meshCount), 1, fout);
+        fwrite(&materialsCount, sizeof(materialsCount), 1, fout);
+
+        for (size_t i = 0; i < materialsCount; i++)
+        {
+            _wstring* pwstrMaterialTexturePath = pModel->Get_MaterialTexturePath(i);
+
+            for (size_t j = 0; j < AI_TEXTURE_TYPE_MAX; j++)
+            {
+                std::string materialTexturePath = wstringToString(pwstrMaterialTexturePath[j]);
+                _uint pathSize = materialTexturePath.size();
+                if (pathSize == 0)
+                {
+                    std::string noPath = "NO_PATH";
+                    _uint noPathSize = noPath.size();
+
+                    fwrite(&noPathSize, sizeof(noPathSize), 1, fout);
+                    fwrite(noPath.c_str(), noPathSize, 1, fout);
+                }
+                else
+                {
+                    fwrite(&pathSize, sizeof(pathSize), 1, fout);
+                    fwrite(materialTexturePath.c_str(), pathSize, 1, fout);
+                }
+            }
+        }
+
+        vector<CMesh*>& vecMesh = pModel->Get_Meshes();
+        for (size_t i = 0; i < vecMesh.size(); i++)
+        {
+            _uint materialIndex = vecMesh[i]->Get_MaterialIndex();
+            _uint numVertices = vecMesh[i]->m_iNumVertices;
+            _uint vertexStride = vecMesh[i]->m_iVertexStride;
+
+            fwrite(&materialIndex, sizeof(materialIndex), 1, fout);
+            fwrite(&numVertices, sizeof(numVertices), 1, fout);
+            fwrite(&vertexStride, sizeof(vertexStride), 1, fout);
+
+            VTXMESH* pVertices = vecMesh[i]->Get_Vertices();
+            for (size_t j = 0; j < numVertices; j++)
+            {
+                fwrite(&pVertices[j].vPosition, sizeof(pVertices[j].vPosition), 1, fout);
+                fwrite(&pVertices[j].vNormal, sizeof(pVertices[j].vNormal), 1, fout);
+                fwrite(&pVertices[j].vTexcoord, sizeof(pVertices[j].vTexcoord), 1, fout);
+                fwrite(&pVertices[j].vTangent, sizeof(pVertices[j].vTangent), 1, fout);
+            }
+
+            _uint numIndices = vecMesh[i]->m_iNumIndices;
+            _uint indexStride = vecMesh[i]->m_iIndexStride;
+            fwrite(&numIndices, sizeof(numIndices), 1, fout);
+            fwrite(&indexStride, sizeof(indexStride), 1, fout);
+
+            _uint* pIndices = vecMesh[i]->Get_Indices();
+            fwrite(pIndices, sizeof(_uint), numIndices, fout);
+
+            fwrite(&vecMesh[i]->m_eIndexFormat, sizeof(vecMesh[i]->m_eIndexFormat), 1, fout);
+            fwrite(&vecMesh[i]->m_eTopology, sizeof(vecMesh[i]->m_eTopology), 1, fout);
+
+            fwrite(&vecMesh[i]->Get_MinPos(), sizeof(vecMesh[i]->Get_MinPos()), 1, fout);
+            fwrite(&vecMesh[i]->Get_MaxPos(), sizeof(vecMesh[i]->Get_MaxPos()), 1, fout);
+        }
+
+        _float4x4 WorldMatrix = {};
+        XMStoreFloat4x4(&WorldMatrix, pGameObj->Get_Transform()->Get_WorldMatrix());
+
+        fwrite(&WorldMatrix, sizeof(WorldMatrix), 1, fout);
+    }
+
+
+
+
+
+
+
+
+
+
+
     fclose(fout);
     MSG_BOX(TEXT("NonAnim모델저장 성공!"));
 
@@ -1810,7 +2564,7 @@ void CLevel_MapTool::Save_AnimObject()
         CModel* pModel = pGameObj->Get_Model();
 
         // GameObject
-        _uint objectType = pGameObj->Get_ObjectType();
+        _uint objectType = pGameObj->Get_ModelListType();
         fwrite(&objectType, sizeof(_uint), 1, fp);
 
         std::string prototypeName = wstringToString(wstrMyPrototypeName);
@@ -2023,6 +2777,128 @@ void CLevel_MapTool::Save_AnimObject()
         XMStoreFloat4x4(&WorldMatrix, pGameObj->Get_Transform()->Get_WorldMatrix());
 
         fwrite(&WorldMatrix, sizeof(_float4x4), 1, fp);
+
+
+        if (MODEL_CHECK_LIST::ELITE == objectType ||
+            MODEL_CHECK_LIST::JETPACK == objectType ||
+            MODEL_CHECK_LIST::PISTOL == objectType ||
+            MODEL_CHECK_LIST::SNIPER == objectType)
+        {
+            // 컨테이너 오브젝트라면
+
+            _wstring wstrMyPrototypeName = pGameObj->Get_PrototypeName();
+            _wstring wstrMyLayerName = pGameObj->Get_LayerName();
+
+
+            // GameObject
+            _uint objectType = pGameObj->Get_ModelListType();
+            fwrite(&objectType, sizeof(objectType), 1, fp);
+
+            std::string prototypeName = wstringToString(wstrMyPrototypeName);
+            std::string layerName = wstringToString(wstrMyLayerName);
+
+            _uint prototypeNameSize = prototypeName.size();
+            _uint layerNameSize = layerName.size();
+
+            fwrite(&prototypeNameSize, sizeof(prototypeNameSize), 1, fp);
+            fwrite(prototypeName.c_str(), prototypeNameSize, 1, fp);
+            fwrite(&layerNameSize, sizeof(layerNameSize), 1, fp);
+            fwrite(layerName.c_str(), layerNameSize, 1, fp);
+
+            CContainerObject* pContainerObject = static_cast<CContainerObject*>(pGameObj);
+            _uint iPartSize = pContainerObject->Get_PartSize();
+
+            fwrite(&iPartSize, sizeof(iPartSize), 1, fp);
+
+            for (_uint i = 0; i < pContainerObject->Get_PartSize(); i++)
+            {
+                CModel* pModel = pContainerObject->Get_Part(i)->Get_Model();            
+
+ 
+                std::string modelPrototypeName = wstringToString(pModel->Get_PrototypeName());
+                _uint modelType = pModel->Get_ModelType();
+                std::string modelFilePath = wstringToString(pModel->Get_m_strModelFilePath());
+
+                _uint modelPrototypeNameSize = modelPrototypeName.size();
+                _uint modelFilePathSize = modelFilePath.size();
+                _uint meshCount = pModel->Get_MeshesCount();
+                _uint materialsCount = pModel->Get_MaterialsCount();
+
+                _float4x4 PreTransformMatrix = pModel->Get_PreTransformMatrix();
+                fwrite(&PreTransformMatrix, sizeof(PreTransformMatrix), 1, fp);
+
+                fwrite(&modelPrototypeNameSize, sizeof(modelPrototypeNameSize), 1, fp);
+                fwrite(modelPrototypeName.c_str(), modelPrototypeNameSize, 1, fp);
+                fwrite(&modelType, sizeof(modelType), 1, fp);
+                fwrite(&modelFilePathSize, sizeof(modelFilePathSize), 1, fp);
+                fwrite(modelFilePath.c_str(), modelFilePathSize, 1, fp);
+                fwrite(&meshCount, sizeof(meshCount), 1, fp);
+                fwrite(&materialsCount, sizeof(materialsCount), 1, fp);
+
+                for (size_t i = 0; i < materialsCount; i++) {
+                    _wstring* pwstrMaterialTexturePath = pModel->Get_MaterialTexturePath(i);
+                    for (size_t j = 0; j < AI_TEXTURE_TYPE_MAX; j++) {
+                        std::string materialTexturePath = wstringToString(pwstrMaterialTexturePath[j]);
+                        _uint pathSize = materialTexturePath.size();
+                        if (pathSize == 0) {
+                            std::string noPath = "NO_PATH";
+                            _uint noPathSize = noPath.size();
+                            fwrite(&noPathSize, sizeof(noPathSize), 1, fp);
+                            fwrite(noPath.c_str(), noPathSize, 1, fp);
+                        }
+                        else {
+                            fwrite(&pathSize, sizeof(pathSize), 1, fp);
+                            fwrite(materialTexturePath.c_str(), pathSize, 1, fp);
+                        }
+                    }
+                }
+
+                vector<CMesh*>& vecMesh = pModel->Get_Meshes();
+                for (size_t i = 0; i < vecMesh.size(); i++) {
+                    _uint materialIndex = vecMesh[i]->Get_MaterialIndex();
+                    _uint numVertices = vecMesh[i]->m_iNumVertices;
+                    _uint vertexStride = vecMesh[i]->m_iVertexStride;
+
+                    fwrite(&materialIndex, sizeof(materialIndex), 1, fp);
+                    fwrite(&numVertices, sizeof(numVertices), 1, fp);
+                    fwrite(&vertexStride, sizeof(vertexStride), 1, fp);
+
+                    VTXMESH* pVertices = vecMesh[i]->Get_Vertices();
+                    for (size_t j = 0; j < numVertices; j++) {
+                        fwrite(&pVertices[j].vPosition, sizeof(pVertices[j].vPosition), 1, fp);
+                        fwrite(&pVertices[j].vNormal, sizeof(pVertices[j].vNormal), 1, fp);
+                        fwrite(&pVertices[j].vTexcoord, sizeof(pVertices[j].vTexcoord), 1, fp);
+                        fwrite(&pVertices[j].vTangent, sizeof(pVertices[j].vTangent), 1, fp);
+                    }
+
+                    _uint numIndices = vecMesh[i]->m_iNumIndices;
+                    _uint indexStride = vecMesh[i]->m_iIndexStride;
+                    fwrite(&numIndices, sizeof(numIndices), 1, fp);
+                    fwrite(&indexStride, sizeof(indexStride), 1, fp);
+
+                    _uint* pIndices = vecMesh[i]->Get_Indices();
+                    fwrite(pIndices, numIndices * sizeof(_uint), 1, fp);
+
+                    fwrite(&vecMesh[i]->m_eIndexFormat, sizeof(vecMesh[i]->m_eIndexFormat), 1, fp);
+                    fwrite(&vecMesh[i]->m_eTopology, sizeof(vecMesh[i]->m_eTopology), 1, fp);
+
+                    fwrite(&vecMesh[i]->Get_MinPos(), sizeof(vecMesh[i]->Get_MinPos()), 1, fp);
+                    fwrite(&vecMesh[i]->Get_MaxPos(), sizeof(vecMesh[i]->Get_MaxPos()), 1, fp);
+                }
+
+            }
+
+
+            _float4x4 WorldMatrix = {};
+            XMStoreFloat4x4(&WorldMatrix, pGameObj->Get_Transform()->Get_WorldMatrix());
+
+            fwrite(&WorldMatrix, sizeof(WorldMatrix), 1, fp);
+
+        }
+                
+            
+
+    
     }
 
     fclose(fp);
@@ -2047,13 +2923,13 @@ void CLevel_MapTool::Save_NonAnimObject_MapTool()
     }
 
 
-    list<CGameObject*>& GameObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Map_Object");
+    list<CGameObject*>& DecorativeObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Decorative_Object");
 
-    _uint iObjectCount = GameObjects.size();
+    _uint iObjectCount = DecorativeObjects.size();
 
     fout.write(reinterpret_cast<_char*>(&iObjectCount), sizeof(iObjectCount));                    // 오브젝트의 갯수
 
-    for (auto pGameObj : GameObjects)
+    for (auto pGameObj : DecorativeObjects)
     {
         _wstring wstrMyPrototypeName = pGameObj->Get_PrototypeName();
         _wstring wstrMyLayerName = pGameObj->Get_LayerName();
@@ -2061,7 +2937,56 @@ void CLevel_MapTool::Save_NonAnimObject_MapTool()
 
 
         // GameObject
-        _uint objectType = pGameObj->Get_ObjectType();
+        _uint objectType = pGameObj->Get_ModelListType();
+        fout.write(reinterpret_cast<char*>(&objectType), sizeof(objectType));
+
+
+        _uint ModelNum = pGameObj->Get_ModelNum();
+        fout.write(reinterpret_cast<char*>(&ModelNum), sizeof(ModelNum));
+
+
+
+        std::string prototypeName = wstringToString(wstrMyPrototypeName);
+        std::string layerName = wstringToString(wstrMyLayerName);
+
+        _uint prototypeNameSize = prototypeName.size();
+        _uint layerNameSize = layerName.size();
+
+
+        fout.write(reinterpret_cast<char*>(&prototypeNameSize), sizeof(prototypeNameSize));
+        fout.write(prototypeName.c_str(), prototypeNameSize);
+
+
+        fout.write(reinterpret_cast<char*>(&layerNameSize), sizeof(layerNameSize));
+        fout.write(layerName.c_str(), layerNameSize);
+
+
+
+
+
+        _float4x4 WorldMatrix = {};
+        XMStoreFloat4x4(&WorldMatrix, pGameObj->Get_Transform()->Get_WorldMatrix());
+
+        fout.write(reinterpret_cast<char*>(&WorldMatrix), sizeof(WorldMatrix));
+    }
+
+
+
+    list<CGameObject*>& StaticObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Static_Object");
+
+   iObjectCount = StaticObjects.size();
+
+    fout.write(reinterpret_cast<_char*>(&iObjectCount), sizeof(iObjectCount));                    // 오브젝트의 갯수
+
+    for (auto pGameObj : StaticObjects)
+    {
+        _wstring wstrMyPrototypeName = pGameObj->Get_PrototypeName();
+        _wstring wstrMyLayerName = pGameObj->Get_LayerName();
+        CModel* pModel = pGameObj->Get_Model();
+
+
+        // GameObject
+        _uint objectType = pGameObj->Get_ModelListType();
         fout.write(reinterpret_cast<char*>(&objectType), sizeof(objectType));
 
         _uint ModelNum = pGameObj->Get_ModelNum();
@@ -2092,6 +3017,62 @@ void CLevel_MapTool::Save_NonAnimObject_MapTool()
 
         fout.write(reinterpret_cast<char*>(&WorldMatrix), sizeof(WorldMatrix));
     }
+
+
+
+
+
+    list<CGameObject*>& DynamicObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Dynamic_Object");
+
+    iObjectCount = DynamicObjects.size();
+
+    fout.write(reinterpret_cast<_char*>(&iObjectCount), sizeof(iObjectCount));                    // 오브젝트의 갯수
+
+    for (auto pGameObj : DynamicObjects)
+    {
+        _wstring wstrMyPrototypeName = pGameObj->Get_PrototypeName();
+        _wstring wstrMyLayerName = pGameObj->Get_LayerName();
+        CModel* pModel = pGameObj->Get_Model();
+
+
+        // GameObject
+        _uint objectType = pGameObj->Get_ModelListType();
+        fout.write(reinterpret_cast<char*>(&objectType), sizeof(objectType));
+
+        _uint ModelNum = pGameObj->Get_ModelNum();
+        fout.write(reinterpret_cast<char*>(&ModelNum), sizeof(ModelNum));
+
+
+
+        std::string prototypeName = wstringToString(wstrMyPrototypeName);
+        std::string layerName = wstringToString(wstrMyLayerName);
+
+        _uint prototypeNameSize = prototypeName.size();
+        _uint layerNameSize = layerName.size();
+
+
+        fout.write(reinterpret_cast<char*>(&prototypeNameSize), sizeof(prototypeNameSize));
+        fout.write(prototypeName.c_str(), prototypeNameSize);
+
+
+        fout.write(reinterpret_cast<char*>(&layerNameSize), sizeof(layerNameSize));
+        fout.write(layerName.c_str(), layerNameSize);
+
+
+
+
+
+        _float4x4 WorldMatrix = {};
+        XMStoreFloat4x4(&WorldMatrix, pGameObj->Get_Transform()->Get_WorldMatrix());
+
+        fout.write(reinterpret_cast<char*>(&WorldMatrix), sizeof(WorldMatrix));
+    }
+
+
+
+
+
+
 
     fout.close();
     MSG_BOX(TEXT("맵툴전용 NonAnim모델저장 성공!"));
@@ -2129,7 +3110,7 @@ void CLevel_MapTool::Save_AnimObject_MapTool()
 
 
         // GameObject
-        _uint objectType = pGameObj->Get_ObjectType();
+        _uint objectType = pGameObj->Get_ModelListType();
         fout.write(reinterpret_cast<char*>(&objectType), sizeof(objectType));
 
         _uint ModelNum = pGameObj->Get_ModelNum();
@@ -2168,7 +3149,7 @@ void CLevel_MapTool::Save_AnimObject_MapTool()
 
 void CLevel_MapTool::Save_Player()
 {
-    FILE* fout = fopen("../Bin/Player_Model_Data.dat", "wb");
+    FILE* fout = fopen("../Bin/Player_Model_Data.bin", "wb");
 
     if (fout == nullptr) {
         perror("파일 열기 실패");
@@ -2183,7 +3164,7 @@ void CLevel_MapTool::Save_Player()
     CModel* pBodyModel = dynamic_cast<CContainerObject*>(pGameObj)->Get_Part(CPlayer::PARTID::PART_BODY)->Get_Model();
 
     // GameObject
-    _uint objectType = pGameObj->Get_ObjectType();
+    _uint objectType = pGameObj->Get_ModelListType();
     fwrite(&objectType, sizeof(_uint), 1, fout);
 
     std::string prototypeName = wstringToString(wstrMyPrototypeName);
@@ -2376,10 +3357,10 @@ void CLevel_MapTool::Save_Player()
         {
             _wstring wstrMyPrototypeName = pGameObj->Get_PrototypeName();
             _wstring wstrMyLayerName = pGameObj->Get_LayerName();
-            CModel* pWeaponModel = dynamic_cast<CContainerObject*>(pGameObj)->Get_Part(CPlayer::PARTID::PART_WEAPON)->Get_Model();
 
+                  
             // GameObject
-            _uint objectType = pGameObj->Get_ObjectType();
+            _uint objectType = pGameObj->Get_ModelListType();
             fwrite(&objectType, sizeof(objectType), 1, fout);
 
             std::string prototypeName = wstringToString(wstrMyPrototypeName);
@@ -2393,77 +3374,90 @@ void CLevel_MapTool::Save_Player()
             fwrite(&layerNameSize, sizeof(layerNameSize), 1, fout);
             fwrite(layerName.c_str(), layerNameSize, 1, fout);
 
-            // Model
-            std::string modelPrototypeName = wstringToString(pWeaponModel->Get_PrototypeName());
-            _uint modelType = pWeaponModel->Get_ModelType();
-            std::string modelFilePath = wstringToString(pWeaponModel->Get_m_strModelFilePath());
 
-            _uint modelPrototypeNameSize = modelPrototypeName.size();
-            _uint modelFilePathSize = modelFilePath.size();
-            _uint meshCount = pWeaponModel->Get_MeshesCount();
-            _uint materialsCount = pWeaponModel->Get_MaterialsCount();
 
-            _float4x4 PreTransformMatrix = pWeaponModel->Get_PreTransformMatrix();
-            fwrite(&PreTransformMatrix, sizeof(PreTransformMatrix), 1, fout);
+            for (_uint i = 0; i < CWeapon_Player::WEAPON_TYPE_END; i++)
+            {
+                CPartObject* pPartWeapon = dynamic_cast<CContainerObject*>(pGameObj)->Get_Part(CPlayer::PARTID::PART_WEAPON);
 
-            fwrite(&modelPrototypeNameSize, sizeof(modelPrototypeNameSize), 1, fout);
-            fwrite(modelPrototypeName.c_str(), modelPrototypeNameSize, 1, fout);
-            fwrite(&modelType, sizeof(modelType), 1, fout);
-            fwrite(&modelFilePathSize, sizeof(modelFilePathSize), 1, fout);
-            fwrite(modelFilePath.c_str(), modelFilePathSize, 1, fout);
-            fwrite(&meshCount, sizeof(meshCount), 1, fout);
-            fwrite(&materialsCount, sizeof(materialsCount), 1, fout);
+                CModel* pWeaponModel = dynamic_cast<CWeapon_Player*>(pPartWeapon)->Get_TypeModel(CWeapon_Player::WEAPON_TYPE(i));
 
-            for (size_t i = 0; i < materialsCount; i++) {
-                _wstring* pwstrMaterialTexturePath = pWeaponModel->Get_MaterialTexturePath(i);
-                for (size_t j = 0; j < AI_TEXTURE_TYPE_MAX; j++) {
-                    std::string materialTexturePath = wstringToString(pwstrMaterialTexturePath[j]);
-                    _uint pathSize = materialTexturePath.size();
-                    if (pathSize == 0) {
-                        std::string noPath = "NO_PATH";
-                        _uint noPathSize = noPath.size();
-                        fwrite(&noPathSize, sizeof(noPathSize), 1, fout);
-                        fwrite(noPath.c_str(), noPathSize, 1, fout);
-                    }
-                    else {
-                        fwrite(&pathSize, sizeof(pathSize), 1, fout);
-                        fwrite(materialTexturePath.c_str(), pathSize, 1, fout);
+
+                // Model
+                std::string modelPrototypeName = wstringToString(pWeaponModel->Get_PrototypeName());
+                _uint modelType = pWeaponModel->Get_ModelType();
+                std::string modelFilePath = wstringToString(pWeaponModel->Get_m_strModelFilePath());
+
+                _uint modelPrototypeNameSize = modelPrototypeName.size();
+                _uint modelFilePathSize = modelFilePath.size();
+                _uint meshCount = pWeaponModel->Get_MeshesCount();
+                _uint materialsCount = pWeaponModel->Get_MaterialsCount();
+
+                _float4x4 PreTransformMatrix = pWeaponModel->Get_PreTransformMatrix();
+                fwrite(&PreTransformMatrix, sizeof(PreTransformMatrix), 1, fout);
+
+                fwrite(&modelPrototypeNameSize, sizeof(modelPrototypeNameSize), 1, fout);
+                fwrite(modelPrototypeName.c_str(), modelPrototypeNameSize, 1, fout);
+                fwrite(&modelType, sizeof(modelType), 1, fout);
+                fwrite(&modelFilePathSize, sizeof(modelFilePathSize), 1, fout);
+                fwrite(modelFilePath.c_str(), modelFilePathSize, 1, fout);
+                fwrite(&meshCount, sizeof(meshCount), 1, fout);
+                fwrite(&materialsCount, sizeof(materialsCount), 1, fout);
+
+                for (size_t i = 0; i < materialsCount; i++) {
+                    _wstring* pwstrMaterialTexturePath = pWeaponModel->Get_MaterialTexturePath(i);
+                    for (size_t j = 0; j < AI_TEXTURE_TYPE_MAX; j++) {
+                        std::string materialTexturePath = wstringToString(pwstrMaterialTexturePath[j]);
+                        _uint pathSize = materialTexturePath.size();
+                        if (pathSize == 0) {
+                            std::string noPath = "NO_PATH";
+                            _uint noPathSize = noPath.size();
+                            fwrite(&noPathSize, sizeof(noPathSize), 1, fout);
+                            fwrite(noPath.c_str(), noPathSize, 1, fout);
+                        }
+                        else {
+                            fwrite(&pathSize, sizeof(pathSize), 1, fout);
+                            fwrite(materialTexturePath.c_str(), pathSize, 1, fout);
+                        }
                     }
                 }
-            }
 
-            vector<CMesh*>& vecMesh = pWeaponModel->Get_Meshes();
-            for (size_t i = 0; i < vecMesh.size(); i++) {
-                _uint materialIndex = vecMesh[i]->Get_MaterialIndex();
-                _uint numVertices = vecMesh[i]->m_iNumVertices;
-                _uint vertexStride = vecMesh[i]->m_iVertexStride;
+                vector<CMesh*>& vecMesh = pWeaponModel->Get_Meshes();
+                for (size_t i = 0; i < vecMesh.size(); i++) {
+                    _uint materialIndex = vecMesh[i]->Get_MaterialIndex();
+                    _uint numVertices = vecMesh[i]->m_iNumVertices;
+                    _uint vertexStride = vecMesh[i]->m_iVertexStride;
 
-                fwrite(&materialIndex, sizeof(materialIndex), 1, fout);
-                fwrite(&numVertices, sizeof(numVertices), 1, fout);
-                fwrite(&vertexStride, sizeof(vertexStride), 1, fout);
+                    fwrite(&materialIndex, sizeof(materialIndex), 1, fout);
+                    fwrite(&numVertices, sizeof(numVertices), 1, fout);
+                    fwrite(&vertexStride, sizeof(vertexStride), 1, fout);
 
-                VTXMESH* pVertices = vecMesh[i]->Get_Vertices();
-                for (size_t j = 0; j < numVertices; j++) {
-                    fwrite(&pVertices[j].vPosition, sizeof(pVertices[j].vPosition), 1, fout);
-                    fwrite(&pVertices[j].vNormal, sizeof(pVertices[j].vNormal), 1, fout);
-                    fwrite(&pVertices[j].vTexcoord, sizeof(pVertices[j].vTexcoord), 1, fout);
-                    fwrite(&pVertices[j].vTangent, sizeof(pVertices[j].vTangent), 1, fout);
+                    VTXMESH* pVertices = vecMesh[i]->Get_Vertices();
+                    for (size_t j = 0; j < numVertices; j++) {
+                        fwrite(&pVertices[j].vPosition, sizeof(pVertices[j].vPosition), 1, fout);
+                        fwrite(&pVertices[j].vNormal, sizeof(pVertices[j].vNormal), 1, fout);
+                        fwrite(&pVertices[j].vTexcoord, sizeof(pVertices[j].vTexcoord), 1, fout);
+                        fwrite(&pVertices[j].vTangent, sizeof(pVertices[j].vTangent), 1, fout);
+                    }
+
+                    _uint numIndices = vecMesh[i]->m_iNumIndices;
+                    _uint indexStride = vecMesh[i]->m_iIndexStride;
+                    fwrite(&numIndices, sizeof(numIndices), 1, fout);
+                    fwrite(&indexStride, sizeof(indexStride), 1, fout);
+
+                    _uint* pIndices = vecMesh[i]->Get_Indices();
+                    fwrite(pIndices, numIndices * sizeof(_uint), 1, fout);
+
+                    fwrite(&vecMesh[i]->m_eIndexFormat, sizeof(vecMesh[i]->m_eIndexFormat), 1, fout);
+                    fwrite(&vecMesh[i]->m_eTopology, sizeof(vecMesh[i]->m_eTopology), 1, fout);
+
+                    fwrite(&vecMesh[i]->Get_MinPos(), sizeof(vecMesh[i]->Get_MinPos()), 1, fout);
+                    fwrite(&vecMesh[i]->Get_MaxPos(), sizeof(vecMesh[i]->Get_MaxPos()), 1, fout);
                 }
 
-                _uint numIndices = vecMesh[i]->m_iNumIndices;
-                _uint indexStride = vecMesh[i]->m_iIndexStride;
-                fwrite(&numIndices, sizeof(numIndices), 1, fout);
-                fwrite(&indexStride, sizeof(indexStride), 1, fout);
-
-                _uint* pIndices = vecMesh[i]->Get_Indices();
-                fwrite(pIndices, numIndices * sizeof(_uint), 1, fout);
-
-                fwrite(&vecMesh[i]->m_eIndexFormat, sizeof(vecMesh[i]->m_eIndexFormat), 1, fout);
-                fwrite(&vecMesh[i]->m_eTopology, sizeof(vecMesh[i]->m_eTopology), 1, fout);
-
-                fwrite(&vecMesh[i]->Get_MinPos(), sizeof(vecMesh[i]->Get_MinPos()), 1, fout);
-                fwrite(&vecMesh[i]->Get_MaxPos(), sizeof(vecMesh[i]->Get_MaxPos()), 1, fout);
             }
+
+            
 
             _float4x4 WorldMatrix = {};
             XMStoreFloat4x4(&WorldMatrix, pGameObj->Get_Transform()->Get_WorldMatrix());
@@ -2615,6 +3609,7 @@ void CLevel_MapTool::Load_Terrain()
 
 }
 
+
 void CLevel_MapTool::Load_NonAnimObject_MapTool()
 {
     ifstream fin;
@@ -2668,14 +3663,200 @@ void CLevel_MapTool::Load_NonAnimObject_MapTool()
         Desc.fRotationPerSec = 20.f;
         Desc.fSpeedPerSec = 20.f;
         Desc.iModelNum = iModelNum;
-        Desc.iObjectType = iObjectType;
+        Desc.iModelListType = iObjectType;
         Desc.InitWorldMatrix = XMLoadFloat4x4(&WorldMatrix);
+
+        
+        if (wstrMyLayerName == L"Layer_Map_Object")
+        {
+            if (wstrMyPrototypeName == TEXT("Prototype_GameObject_Decorative_Object"))
+            {
+                iObjectType = CLevel_MapTool::DECORATIVE_OBJECT;
+            }
+            else if (wstrMyPrototypeName == TEXT("Prototype_GameObject_Static_Object"))
+            {
+                iObjectType = CLevel_MapTool::STATIC_OBJECT;
+            }
+            else if (wstrMyPrototypeName == TEXT("Prototype_GameObject_Dynamic_Object"))
+            {
+                iObjectType = CLevel_MapTool::DYNAMIC_OBJECT;
+            }
+
+        }
+       
+
+            
+        switch (iObjectType)
+        {
+        case Client::CLevel_MapTool::DECORATIVE_OBJECT:
+            wstrMyLayerName = L"Layer_Decorative_Object";
+            break;
+        case Client::CLevel_MapTool::STATIC_OBJECT:
+            wstrMyLayerName = L"Layer_Static_Object";
+            break;
+        case Client::CLevel_MapTool::DYNAMIC_OBJECT:
+            wstrMyLayerName = L"Layer_Dynamic_Object";
+            break;
+        case Client::CLevel_MapTool::OBJECT_TYPE_END:
+            break;
+        default:
+            break;
+        }
+        
 
         m_pGameInstance->Add_CloneObject_ToLayer(LEVEL_MAPTOOL, wstrMyLayerName, wstrMyPrototypeName, &Desc);
 
     }
 
  
+
+    fin.read(reinterpret_cast<char*>(&iObjectCount), sizeof(iObjectCount));
+    for (_uint i = 0; i < iObjectCount; i++)
+    {
+        // 객체원형 //
+        fin.read(reinterpret_cast<char*>(&iObjectType), sizeof(iObjectType));
+        fin.read(reinterpret_cast<char*>(&iModelNum), sizeof(iModelNum));
+
+        // 프로토타입 이름 읽기
+        ReadString(fin, strMyPrototypeName);
+        wstrMyPrototypeName = stringToWstring(strMyPrototypeName);
+
+        // 레이어 이름 읽기
+        ReadString(fin, strMyLayerName);
+        wstrMyLayerName = stringToWstring(strMyLayerName);
+
+
+        // 월드 행렬 읽기
+        _float4x4 WorldMatrix;
+        fin.read(reinterpret_cast<char*>(&WorldMatrix), sizeof(WorldMatrix));
+
+
+        Desc.fRotationPerSec = 20.f;
+        Desc.fSpeedPerSec = 20.f;
+        Desc.iModelNum = iModelNum;
+        Desc.iModelListType = iObjectType;
+        Desc.InitWorldMatrix = XMLoadFloat4x4(&WorldMatrix);
+
+
+        if (wstrMyLayerName == L"Layer_Map_Object")
+        {
+            if (wstrMyPrototypeName == TEXT("Prototype_GameObject_Decorative_Object"))
+            {
+                iObjectType = CLevel_MapTool::DECORATIVE_OBJECT;
+            }
+            else if (wstrMyPrototypeName == TEXT("Prototype_GameObject_Static_Object"))
+            {
+                iObjectType = CLevel_MapTool::STATIC_OBJECT;
+            }
+            else if (wstrMyPrototypeName == TEXT("Prototype_GameObject_Dynamic_Object"))
+            {
+                iObjectType = CLevel_MapTool::DYNAMIC_OBJECT;
+            }
+
+        }
+
+
+
+        switch (iObjectType)
+        {
+        case Client::CLevel_MapTool::DECORATIVE_OBJECT:
+            wstrMyLayerName = L"Layer_Decorative_Object";
+            break;
+        case Client::CLevel_MapTool::STATIC_OBJECT:
+            wstrMyLayerName = L"Layer_Static_Object";
+            break;
+        case Client::CLevel_MapTool::DYNAMIC_OBJECT:
+            wstrMyLayerName = L"Layer_Dynamic_Object";
+            break;
+        case Client::CLevel_MapTool::OBJECT_TYPE_END:
+            break;
+        default:
+            break;
+        }
+
+
+        m_pGameInstance->Add_CloneObject_ToLayer(LEVEL_MAPTOOL, wstrMyLayerName, wstrMyPrototypeName, &Desc);
+
+    }
+
+
+
+    fin.read(reinterpret_cast<char*>(&iObjectCount), sizeof(iObjectCount));
+    for (_uint i = 0; i < iObjectCount; i++)
+    {
+        // 객체원형 //
+        fin.read(reinterpret_cast<char*>(&iObjectType), sizeof(iObjectType));
+        fin.read(reinterpret_cast<char*>(&iModelNum), sizeof(iModelNum));
+
+        // 프로토타입 이름 읽기
+        ReadString(fin, strMyPrototypeName);
+        wstrMyPrototypeName = stringToWstring(strMyPrototypeName);
+
+        // 레이어 이름 읽기
+        ReadString(fin, strMyLayerName);
+        wstrMyLayerName = stringToWstring(strMyLayerName);
+
+
+        // 월드 행렬 읽기
+        _float4x4 WorldMatrix;
+        fin.read(reinterpret_cast<char*>(&WorldMatrix), sizeof(WorldMatrix));
+
+
+        Desc.fRotationPerSec = 20.f;
+        Desc.fSpeedPerSec = 20.f;
+        Desc.iModelNum = iModelNum;
+        Desc.iModelListType = iObjectType;
+        Desc.InitWorldMatrix = XMLoadFloat4x4(&WorldMatrix);
+
+
+        if (wstrMyLayerName == L"Layer_Map_Object")
+        {
+            if (wstrMyPrototypeName == TEXT("Prototype_GameObject_Decorative_Object"))
+            {
+                iObjectType = CLevel_MapTool::DECORATIVE_OBJECT;
+            }
+            else if (wstrMyPrototypeName == TEXT("Prototype_GameObject_Static_Object"))
+            {
+                iObjectType = CLevel_MapTool::STATIC_OBJECT;
+            }
+            else if (wstrMyPrototypeName == TEXT("Prototype_GameObject_Dynamic_Object"))
+            {
+                iObjectType = CLevel_MapTool::DYNAMIC_OBJECT;
+            }
+
+        }
+
+
+
+        switch (iObjectType)
+        {
+        case Client::CLevel_MapTool::DECORATIVE_OBJECT:
+            wstrMyLayerName = L"Layer_Decorative_Object";
+            break;
+        case Client::CLevel_MapTool::STATIC_OBJECT:
+            wstrMyLayerName = L"Layer_Static_Object";
+            break;
+        case Client::CLevel_MapTool::DYNAMIC_OBJECT:
+            wstrMyLayerName = L"Layer_Dynamic_Object";
+            break;
+        case Client::CLevel_MapTool::OBJECT_TYPE_END:
+            break;
+        default:
+            break;
+        }
+
+
+        m_pGameInstance->Add_CloneObject_ToLayer(LEVEL_MAPTOOL, wstrMyLayerName, wstrMyPrototypeName, &Desc);
+
+    }
+
+
+
+
+
+
+
+
     fin.close();
     MSG_BOX(TEXT("LEVEL_MAPTOOL의 NonAnimObject 정보를 Load했습니다."));
 
@@ -2820,7 +4001,7 @@ void CLevel_MapTool::Load_AnimObject_MapTool()
         Desc.fRotationPerSec = 20.f;
         Desc.fSpeedPerSec = 20.f;
         Desc.iModelNum = iModelNum;
-        Desc.iObjectType = iObjectType;
+        Desc.iModelListType = iObjectType;
         Desc.InitWorldMatrix = XMLoadFloat4x4(&WorldMatrix);
 
         m_pGameInstance->Add_CloneObject_ToLayer(LEVEL_MAPTOOL, wstrMyLayerName, wstrMyPrototypeName, &Desc);

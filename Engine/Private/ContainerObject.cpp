@@ -31,6 +31,7 @@ void CContainerObject::Priority_Update(_float fTimeDelta)
 
 void CContainerObject::Update(_float fTimeDelta)
 {
+	__super::Update(fTimeDelta);
 }
 
 void CContainerObject::Late_Update(_float fTimeDelta)

@@ -10,8 +10,54 @@ class MyErrorCallback : public PxErrorCallback
 public:
 	virtual void reportError(PxErrorCode::Enum code, const char* message, const char* file, int line) override
 	{
-		MSG_BOX(TEXT("Phys 초기화 에러"));
+		//MSG_BOX(TEXT("Phys 초기화 에러"));
 	}
+};
+
+
+
+
+class MySimulationEventCallback : public PxSimulationEventCallback
+{
+public:
+    // 충돌이 발생하거나 진행 중일 때 호출
+    void onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs, PxU32 pairCount) override
+    {
+        for (PxU32 i = 0; i < pairCount; ++i)
+        {
+            const PxContactPair& pair = pairs[i];
+
+            // 충돌한 액터와 모양 정보
+            PxActor* actor0 = pairHeader.actors[0];
+            PxActor* actor1 = pairHeader.actors[1];
+
+            // 충돌 쌍의 플래그 확인
+            if (pair.flags.isSet(PxContactPairFlag::eACTOR_PAIR_HAS_FIRST_TOUCH))
+            {
+                // 충돌이 새로 시작됨
+                printf("Contact started between Actor %p and Actor %p\n", actor0, actor1);
+            }
+            else if (pair.flags.isSet(PxContactPairFlag::eACTOR_PAIR_LOST_TOUCH))
+            {
+                // 충돌이 종료됨
+                printf("Contact ended between Actor %p and Actor %p\n", actor0, actor1);
+            }
+
+            // 충돌 지점 정보 출력
+            for (PxU32 j = 0; j < pair.contactCount; ++j)
+            {
+                const PxU8& contact = pair.contactPoints[j];
+               
+            }
+        }
+    }
+
+    // 나머지 메소드 구현 (필요한 경우)
+    void onTrigger(PxTriggerPair* pairs, PxU32 pairCount) override {}
+    void onConstraintBreak(PxConstraintInfo* constraints, PxU32 count) override {}
+    void onWake(PxActor** actors, PxU32 count) override {}
+    void onSleep(PxActor** actors, PxU32 count) override {}
+    void onAdvance(const PxRigidBody* const* bodyBuffer, const PxTransform* poseBuffer, const PxU32 count) override {}
 };
 
 END
@@ -30,9 +76,16 @@ public:
 	PxMaterial* Get_Material() { return m_pMaterial; }
 
 
+
+
+
+
 public:
 	HRESULT Initialize();
 	void Update();
+
+
+
 
 
 private:
@@ -44,6 +97,11 @@ private:
 
 	PxDefaultCpuDispatcher*		m_pDispatcher = nullptr;		// 물리 시뮬레이션의 멀티스레딩을 관리 ( 일단 딱히 필요없음 )
 	PxPvd*						m_pPvd = nullptr;
+
+
+    // 충돌 콜백을 위한 멤버 변수
+    MySimulationEventCallback* m_pSimulationEventCallback = nullptr;
+
 
 private:
 	HRESULT	Ready_PhysX();

@@ -29,7 +29,7 @@ public:
 
 public:
 	HRESULT Bind_ShaderResource(class CShader* pShader, const _char* pConstantName, _uint iTextureIndex);
-	
+
 
 private:
 	_uint											m_iNumTextures = { 0 };

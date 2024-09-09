@@ -37,7 +37,9 @@ HRESULT CGameObject::Initialize(void* pArg)
 	GAMEOBJECT_DESC* pDesc = static_cast<GAMEOBJECT_DESC*>(pArg);
 
 	m_iModelNum = pDesc->iModelNum;             // 몇번째 모델을 사용할거니 ? 같은 클래스의 오브젝트더라도 모델이 다를수 있지?
-	m_iObjectType = pDesc->iObjectType;			// KIT, ETC ,,,
+	m_iModelListType = pDesc->iModelListType;
+
+	m_iObjectType = pDesc->iObjectType;		// 데코,스태틱,다이나믹?
 
 
 	m_pTransformCom = CTransform::Create(m_pDevice, m_pContext, pDesc);
@@ -60,10 +62,10 @@ void CGameObject::Update(_float fTimeDelta)
 	if (m_strLayerName == L"Layer_PreView_Object")
 	{		
 		// 일단 지형의 높이가 0이니까 임시로 0
-		m_pTransformCom->Set_State(CTransform::STATE_POSITION, XMLoadFloat3(&m_pGameInstance->Get_PickingBackGround_JustPos(0)));
+		m_pTransformCom->Set_State(CTransform::STATE_POSITION, XMLoadFloat3(&m_pGameInstance->Get_PickingBackGround_JustPos(0.f)));
 	}
-
 }
+
 
 void CGameObject::Late_Update(_float fTimeDelta)
 {

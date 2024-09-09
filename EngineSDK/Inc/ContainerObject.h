@@ -13,7 +13,7 @@ protected:
 
 public:
 	class CPartObject*		Get_Part(_uint iPartIndex) { return m_Parts[iPartIndex]; }
-
+	_uint					Get_PartSize() { return m_Parts.size(); }
 
 public:
 	virtual HRESULT Initialize_Prototype();

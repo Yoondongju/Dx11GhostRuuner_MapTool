@@ -39,7 +39,7 @@ void CPlayer_Hook::Update(_float fTimeDelta)
 
 
 		pFsm->Change_State(CPlayer::PLAYER_ANIMATIONID::HOOK_UP);
-		pModel->SetUp_Animation(CPlayer::PLAYER_ANIMATIONID::HOOK_DOWN, true);
+		pModel->SetUp_Animation(CPlayer::PLAYER_ANIMATIONID::HOOK_UP, true);
 	}
 
 

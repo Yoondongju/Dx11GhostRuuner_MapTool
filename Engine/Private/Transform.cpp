@@ -86,13 +86,15 @@ void CTransform::Go_Straight(_float fTimeDelta , class CNavigation* pNavigation)
 
 	_float fPosY = {};
 
-	if (nullptr == pNavigation || true == pNavigation->isMove(vPosition , &fPosY))
-	{
-		if (pNavigation)
-			vPosition = XMVectorSetY(vPosition, m_fOriginPosY + fPosY);
+	Set_State(STATE_POSITION, vPosition);
 
-		Set_State(STATE_POSITION, vPosition);
-	}
+	//if (nullptr == pNavigation || true == pNavigation->isMove(vPosition , &fPosY))
+	//{
+	//	if (pNavigation)
+	//		vPosition = XMVectorSetY(vPosition, m_fOriginPosY + fPosY);
+	//
+	//	
+	//}
 		
 }
 
@@ -111,13 +113,15 @@ void CTransform::Go_Backward(_float fTimeDelta, class CNavigation* pNavigation)
 
 	_float fPosY = {};
 
-	if (nullptr == pNavigation || true == pNavigation->isMove(vPosition, &fPosY))
-	{
-		if (pNavigation)
-			vPosition = XMVectorSetY(vPosition, m_fOriginPosY + fPosY);
+	Set_State(STATE_POSITION, vPosition);
 
-		Set_State(STATE_POSITION, vPosition);
-	}
+	//if (nullptr == pNavigation || true == pNavigation->isMove(vPosition, &fPosY))
+	//{
+	//	if (pNavigation)
+	//		vPosition = XMVectorSetY(vPosition, m_fOriginPosY + fPosY);
+	//
+	//	
+	//}
 }
 
 void CTransform::Go_Right(_float fTimeDelta, class CNavigation* pNavigation)
@@ -134,13 +138,15 @@ void CTransform::Go_Right(_float fTimeDelta, class CNavigation* pNavigation)
 
 	_float fPosY = {};
 
-	if (nullptr == pNavigation || true == pNavigation->isMove(vPosition, &fPosY))
-	{
-		if (pNavigation)
-			vPosition = XMVectorSetY(vPosition, m_fOriginPosY + fPosY);
+	Set_State(STATE_POSITION, vPosition);
 
-		Set_State(STATE_POSITION, vPosition);
-	}
+	//if (nullptr == pNavigation || true == pNavigation->isMove(vPosition, &fPosY))
+	//{
+	//	if (pNavigation)
+	//		vPosition = XMVectorSetY(vPosition, m_fOriginPosY + fPosY);
+	//
+	//	
+	//}
 }
 
 void CTransform::Go_Left(_float fTimeDelta, class CNavigation* pNavigation)
@@ -158,13 +164,15 @@ void CTransform::Go_Left(_float fTimeDelta, class CNavigation* pNavigation)
 
 	_float fPosY = {};
 
-	if (nullptr == pNavigation || true == pNavigation->isMove(vPosition, &fPosY))
-	{
-		if (pNavigation)
-			vPosition = XMVectorSetY(vPosition, m_fOriginPosY + fPosY);
+	Set_State(STATE_POSITION, vPosition);
 
-		Set_State(STATE_POSITION, vPosition);
-	}
+	//if (nullptr == pNavigation || true == pNavigation->isMove(vPosition, &fPosY))
+	//{
+	//	if (pNavigation)
+	//		vPosition = XMVectorSetY(vPosition, m_fOriginPosY + fPosY);
+	//
+	//	
+	//}
 }
 
 void CTransform::Turn(const _fvector& vAxis, _float fTimeDelta, _float4x4* RotationMatrix)

@@ -13,6 +13,8 @@ BEGIN(Client)
 class CWeapon_Player final : public CPartObject
 {
 public:
+	enum WEAPON_TYPE { KATANA, SHURIKEN, WEAPON_TYPE_END};
+
 	typedef struct : public CPartObject::PARTOBJ_DESC
 	{
 		const _uint* pParentState = { nullptr };
@@ -26,7 +28,9 @@ private:
 
 
 public:
-	class CModel* Get_Model() override { return m_pModelCom; }
+	class CModel* Get_Model() override { return m_pModelCom[m_eCurType]; }
+	class CModel* Get_TypeModel(WEAPON_TYPE eType)  { return m_pModelCom[eType]; }
+
 
 public:
 	virtual HRESULT Initialize_Prototype() override;
@@ -38,7 +42,9 @@ public:
 
 private:
 	class CShader* m_pShaderCom = { nullptr };
-	class CModel*  m_pModelCom = { nullptr };
+	class CModel*  m_pModelCom[WEAPON_TYPE::WEAPON_TYPE_END] = {nullptr};
+
+	WEAPON_TYPE		m_eCurType = { WEAPON_TYPE::KATANA };
 
 private:
 	const _float4x4* m_pSocketMatrix = { nullptr };

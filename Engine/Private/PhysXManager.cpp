@@ -8,10 +8,12 @@ CPhysXManager::CPhysXManager()
 
 HRESULT CPhysXManager::Initialize()
 {
-	if (FAILED(Ready_PhysX()))
-		return E_FAIL;
-
-
+	//if (FAILED(Ready_PhysX()))
+	//	return E_FAIL;
+	//
+	//
+	//m_pSimulationEventCallback = new MySimulationEventCallback();
+	//m_pScene->setSimulationEventCallback(m_pSimulationEventCallback);
 	
 
 	return S_OK;
@@ -32,33 +34,37 @@ HRESULT CPhysXManager::Ready_PhysX()
 	}
 	
 
+	
+	// PVD 설정
+	m_pPvd = PxCreatePvd(*m_pFoundation);
+	if (!m_pPvd) {
+		MSG_BOX(TEXT("PxCreatePvd failed!"));
+		return E_FAIL;
+	}
+	
+	PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
+	if (!transport) {
+		MSG_BOX(TEXT("PxDefaultPvdSocketTransportCreate failed!"));
+		return E_FAIL;
+	}
+	
+	m_pPvd->connect(*transport, PxPvdInstrumentationFlag::eALL);
+
+
+
 	// Physics 객체 생성
-	m_pPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *m_pFoundation, PxTolerancesScale(), true);
+	m_pPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *m_pFoundation, PxTolerancesScale(), true, m_pPvd);
 	if (!m_pPhysics) {
 		MSG_BOX(TEXT("PxCreatePhysics  failed!"));
 		return E_FAIL;
 	}
 
-	// PVD 설정
-	//m_pPvd = PxCreatePvd(*m_pFoundation);
-	//if (!m_pPvd) {
-	//	MSG_BOX(TEXT("PxCreatePvd failed!"));
-	//	return E_FAIL;
-	//}
-	//
-	//PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
-	//if (!transport) {
-	//	MSG_BOX(TEXT("PxDefaultPvdSocketTransportCreate failed!"));
-	//	return E_FAIL;
-	//}
-	//
-	//m_pPvd->connect(*transport, PxPvdInstrumentationFlag::eALL);
-
+	PxInitExtensions(*m_pPhysics, m_pPvd);
 
 
 	// Scene 객체 생성
 	PxSceneDesc sceneDesc(m_pPhysics->getTolerancesScale());
-	sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
+	sceneDesc.gravity = PxVec3(0.0f, 0.f, 0.0f);
 	m_pDispatcher = PxDefaultCpuDispatcherCreate(2);
 	if (!m_pDispatcher) {
 		MSG_BOX(TEXT("PxDefaultCpuDispatcherCreate failed!"));
@@ -71,6 +77,22 @@ HRESULT CPhysXManager::Ready_PhysX()
 		MSG_BOX(TEXT("createScene failed!"));
 		return E_FAIL;
 	}
+
+
+	PxPvdSceneClient* pPvdClient = m_pScene->getScenePvdClient();
+
+
+	if (pPvdClient)
+	{
+		pPvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true); //강체 관련
+
+		pPvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true); // 충돌 관련
+
+		pPvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true); // Scene 쿼리
+	}
+
+
+
 
 
 	// Material 객체 생성
@@ -119,10 +141,30 @@ void CPhysXManager::Free()
 	__super::Free();
 
 
-	m_pPvd->release();
-	m_pFoundation->release();
-	m_pPhysics->release();
-	m_pScene->release();
-	m_pMaterial->release();
-	m_pDispatcher->release();
+	if (m_pSimulationEventCallback)
+	{
+		delete m_pSimulationEventCallback;
+		m_pSimulationEventCallback = nullptr;
+	}
+
+	if (m_pScene)
+		m_pScene->release();
+
+	if (m_pDispatcher)
+		m_pDispatcher->release();
+
+	if (m_pMaterial)
+		m_pMaterial->release();
+
+	if (m_pPhysics)
+		m_pPhysics->release();
+
+	if (m_pPvd)
+	{
+		m_pPvd->disconnect();  // PVD 연결 해제
+		m_pPvd->release();
+	}
+
+	if (m_pFoundation)
+		m_pFoundation->release();
 }

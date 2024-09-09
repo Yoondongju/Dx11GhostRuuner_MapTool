@@ -39,6 +39,26 @@ private:
 
 private:
 	HRESULT Ready_Resources_For_MapToolLevel();
+
+	HRESULT Ready_Fsm();
+
+
+	HRESULT Ready_Model();
+
+	HRESULT Ready_Map_Model();
+	HRESULT Ready_Player_Model();
+	HRESULT Ready_Monster_Model();
+
+
+
+	HRESULT Ready_VIBuffer();
+	HRESULT Ready_Navigation();
+	HRESULT Ready_Shader();
+	HRESULT Ready_ObjectPrototype();
+
+
+
+
 	HRESULT Ready_Resources_For_LogoLevel();
 	HRESULT Ready_Resources_For_GamePlayLevel();
 

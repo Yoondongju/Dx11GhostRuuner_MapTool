@@ -116,7 +116,7 @@ private:
 
 private:
 	_wstring						m_strModelFilePath = L"";
-	_wstring						m_strMaterials_TexturePath[10][AI_TEXTURE_TYPE_MAX] = { L"" };
+	_wstring						m_strMaterials_TexturePath[15][AI_TEXTURE_TYPE_MAX] = { L"" };
 
 
 

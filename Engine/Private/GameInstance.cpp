@@ -85,9 +85,9 @@ HRESULT CGameInstance::Initialize_Engine(_uint iNumLevels, const ENGINE_DESC& En
 	if (nullptr == m_pPipeLine)
 		return S_OK;
 
-	//m_pPhysX_Manager = CPhysXManager::Create();
-	//if (nullptr == m_pPhysX_Manager)
-	//	return S_OK;
+	m_pPhysX_Manager = CPhysXManager::Create();
+	if (nullptr == m_pPhysX_Manager)
+		return S_OK;
 
 
 

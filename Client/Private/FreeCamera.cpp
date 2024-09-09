@@ -43,7 +43,7 @@ HRESULT CFreeCamera::Initialize(void* pArg)
 		return E_FAIL;
 
 
-	XMStoreFloat4(&m_OffsetByPlayer, XMVectorSet(0.f, 15.42215824f, 2.0040216f, 1.f));
+	//XMStoreFloat4(&m_OffsetByPlayer, XMVectorSet(0.f, 15.42215824f, 2.0040216f, 1.f));
 	XMStoreFloat4x4(&m_RotationMatrix, XMMatrixIdentity());
 
 	return S_OK;
@@ -60,39 +60,41 @@ void CFreeCamera::Priority_Update(_float fTimeDelta)
 {
 	CNavigation* pNavigation = nullptr;
 
-	if (g_FollowPlayer)
-	{
-		// 네비를 달고 있는 레이어중에서 탐색을 한다.
-		
-		list<CGameObject*>& Terrains = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_BackGround_Terrain");
-		for (auto& Terrain : Terrains)
-		{
-			_vector vCamPos = m_pTransformCom->Get_State(CTransform::STATE_POSITION);
+	//if (g_FollowPlayer)
+	//{
+	//	// 네비를 달고 있는 레이어중에서 탐색을 한다.
+	//	
+	//	list<CGameObject*>& Terrains = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_BackGround_Terrain");
+	//	for (auto& Terrain : Terrains)
+	//	{
+	//		_vector vCamPos = m_pTransformCom->Get_State(CTransform::STATE_POSITION);
+	//
+	//		_matrix InverseWorldMatrix = {};
+	//		InverseWorldMatrix = XMMatrixInverse(nullptr, Terrain->Get_Transform()->Get_WorldMatrix());
+	//
+	//		vCamPos = XMVector3TransformCoord(vCamPos, InverseWorldMatrix);
+	//
+	//
+	//		_float3 CamLocalPos = {};
+	//		XMStoreFloat3(&CamLocalPos, vCamPos);
+	//
+	//		
+	//		if (Terrain->Get_Navigation()->IsInNavigationRange_About_Local(CamLocalPos))		// 일단 지형만 ..
+	//		{				
+	//			m_pCurNavigationCom->Set_OwnerWorldMatrix(Terrain->Get_Transform()->Get_WorldMatrix_Ptr());
+	//
+	//			break;
+	//		}
+	//			
+	//	}
+	//
+	//
+	//	
+	//
+	//	pNavigation = m_pCurNavigationCom;
+	//}
 
-			_matrix InverseWorldMatrix = {};
-			InverseWorldMatrix = XMMatrixInverse(nullptr, Terrain->Get_Transform()->Get_WorldMatrix());
-
-			vCamPos = XMVector3TransformCoord(vCamPos, InverseWorldMatrix);
-
-
-			_float3 CamLocalPos = {};
-			XMStoreFloat3(&CamLocalPos, vCamPos);
-
-			
-			if (Terrain->Get_Navigation()->IsInNavigationRange_About_Local(CamLocalPos))		// 일단 지형만 ..
-			{				
-				m_pCurNavigationCom->Set_OwnerWorldMatrix(Terrain->Get_Transform()->Get_WorldMatrix_Ptr());
-
-				break;
-			}
-				
-		}
-
-
-		
-
-		pNavigation = m_pCurNavigationCom;
-	}
+	XMStoreFloat4(&m_OffsetByPlayer, XMVectorSet(0.f, 15.42215824f, 8.0040216f, 1.f));
 
 	if (m_pGameInstance->Get_KeyState(KEY::W) == KEY_STATE::HOLD)
 		m_pTransformCom->Go_Straight(fTimeDelta, pNavigation);

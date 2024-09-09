@@ -52,20 +52,8 @@
     <Filter Include="02.GameObjects\Sky">
       <UniqueIdentifier>{b1e13c58-2d83-4215-9b88-53313e32c80d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="02.GameObjects\Aid_props">
-      <UniqueIdentifier>{6f2f2fd8-4021-4a06-984e-9fe3bbfaf645}</UniqueIdentifier>
-    </Filter>
     <Filter Include="02.GameObjects\Player">
       <UniqueIdentifier>{281efd58-b1da-4401-bec7-56a1fc925de1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="02.GameObjects\Building">
-      <UniqueIdentifier>{719c36ce-416c-4d0f-95c9-b61d51d175f0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="02.GameObjects\Monster">
-      <UniqueIdentifier>{829d916b-54bb-49a5-a513-c6bc865428c0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="02.GameObjects\Monster\Spider">
-      <UniqueIdentifier>{3a3a6d47-b286-4bbd-8be3-063cd87acde8}</UniqueIdentifier>
     </Filter>
     <Filter Include="02.GameObjects\Player\Body">
       <UniqueIdentifier>{2b5f9d51-587b-40b0-87d1-64c4daf0e247}</UniqueIdentifier>
@@ -99,6 +87,51 @@
     </Filter>
     <Filter Include="02.GameObjects\Player\PlayerState\Climb">
       <UniqueIdentifier>{da598f69-417b-4ba9-aa35-220b35f74857}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Decorative_Object">
+      <UniqueIdentifier>{6f2f2fd8-4021-4a06-984e-9fe3bbfaf645}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Static_Object">
+      <UniqueIdentifier>{719c36ce-416c-4d0f-95c9-b61d51d175f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Dynamic_Object">
+      <UniqueIdentifier>{83fbeb76-717e-4f1c-929a-f512c51d5276}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster">
+      <UniqueIdentifier>{829d916b-54bb-49a5-a513-c6bc865428c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Spider">
+      <UniqueIdentifier>{3a3a6d47-b286-4bbd-8be3-063cd87acde8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Elite">
+      <UniqueIdentifier>{a1f39cb0-434e-45b8-8174-57dfb1afbc1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Jetpack">
+      <UniqueIdentifier>{d5628203-9652-41b6-b99e-f55c5de5c4c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Mira">
+      <UniqueIdentifier>{a8b2fde1-a6b2-4671-854a-98b6330cfa2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Pistol">
+      <UniqueIdentifier>{a49d40e9-5222-44cd-891a-84ac380a3ebc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Sniper">
+      <UniqueIdentifier>{63800e5e-44f6-4cd8-be7a-5dbed8f8ed29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Jetpack\Weapon">
+      <UniqueIdentifier>{dce97a62-f71b-4aa8-81c0-c4b047db6fee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Jetpack\BackPack">
+      <UniqueIdentifier>{0cc4c78b-0624-450e-9fdc-478d3f879565}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Sniper\Weapon">
+      <UniqueIdentifier>{052e8e24-f1d8-4417-a5bc-b354d9228a9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Pistol\Weapon">
+      <UniqueIdentifier>{92da6fed-0c2d-456a-aea9-fe31b2bfdf31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Elite\Weapon">
+      <UniqueIdentifier>{06aeb0ff-921a-478c-82b4-53e686542695}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -147,14 +180,14 @@
     <ClInclude Include="..\Public\FreeCamera.h">
       <Filter>02.GameObjects\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="..\Public\Aid_props.h">
-      <Filter>02.GameObjects\Aid_props</Filter>
+    <ClInclude Include="..\Public\Decorative_Object.h">
+      <Filter>02.GameObjects\Decorative_Object</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\Sky.h">
       <Filter>02.GameObjects\Sky</Filter>
     </ClInclude>
-    <ClInclude Include="..\Private\Building.h">
-      <Filter>02.GameObjects\Building</Filter>
+    <ClInclude Include="..\Private\Static_Object.h">
+      <Filter>02.GameObjects\Static_Object</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\Monster.h">
       <Filter>02.GameObjects\Monster</Filter>
@@ -194,6 +227,39 @@
     </ClInclude>
     <ClInclude Include="..\Public\Player.h">
       <Filter>02.GameObjects\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Dynamic_Object.h">
+      <Filter>02.GameObjects\Dynamic_Object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Elite.h">
+      <Filter>02.GameObjects\Monster\Elite</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Jetpack.h">
+      <Filter>02.GameObjects\Monster\Jetpack</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Mira.h">
+      <Filter>02.GameObjects\Monster\Mira</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Sniper.h">
+      <Filter>02.GameObjects\Monster\Sniper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Pistol.h">
+      <Filter>02.GameObjects\Monster\Pistol</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Weapon_Jetpack.h">
+      <Filter>02.GameObjects\Monster\Jetpack\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\BackPack_Jetpack.h">
+      <Filter>02.GameObjects\Monster\Jetpack\BackPack</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Weapon_Sniper.h">
+      <Filter>02.GameObjects\Monster\Sniper\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Weapon_Pistol.h">
+      <Filter>02.GameObjects\Monster\Pistol\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Weapon_Elite.h">
+      <Filter>02.GameObjects\Monster\Elite\Weapon</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -252,8 +318,8 @@
     <ClCompile Include="..\..\Imgui\ImGuizmo.cpp">
       <Filter>100. Imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\Private\Aid_props.cpp">
-      <Filter>02.GameObjects\Aid_props</Filter>
+    <ClCompile Include="..\Private\Decorative_Object.cpp">
+      <Filter>02.GameObjects\Decorative_Object</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Imgui\imgui_widgets.cpp">
       <Filter>100. Imgui</Filter>
@@ -282,8 +348,8 @@
     <ClCompile Include="..\Private\Sky.cpp">
       <Filter>02.GameObjects\Sky</Filter>
     </ClCompile>
-    <ClCompile Include="..\Private\Building.cpp">
-      <Filter>02.GameObjects\Building</Filter>
+    <ClCompile Include="..\Private\Static_Object.cpp">
+      <Filter>02.GameObjects\Static_Object</Filter>
     </ClCompile>
     <ClCompile Include="..\Private\Monster.cpp">
       <Filter>02.GameObjects\Monster</Filter>
@@ -320,6 +386,39 @@
     </ClCompile>
     <ClCompile Include="..\Private\Weapon_Player.cpp">
       <Filter>02.GameObjects\Player\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Dynamic_Object.cpp">
+      <Filter>02.GameObjects\Dynamic_Object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Elite.cpp">
+      <Filter>02.GameObjects\Monster\Elite</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Jetpack.cpp">
+      <Filter>02.GameObjects\Monster\Jetpack</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Mira.cpp">
+      <Filter>02.GameObjects\Monster\Mira</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Sniper.cpp">
+      <Filter>02.GameObjects\Monster\Sniper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Pistol.cpp">
+      <Filter>02.GameObjects\Monster\Pistol</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Weapon_Jetpack.cpp">
+      <Filter>02.GameObjects\Monster\Jetpack\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\BackPack_Jetpack.cpp">
+      <Filter>02.GameObjects\Monster\Jetpack\BackPack</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Weapon_Sniper.cpp">
+      <Filter>02.GameObjects\Monster\Sniper\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Weapon_Pistol.cpp">
+      <Filter>02.GameObjects\Monster\Pistol\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Weapon_Elite.cpp">
+      <Filter>02.GameObjects\Monster\Elite\Weapon</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -83,18 +83,18 @@ HRESULT CWeapon_Player::Render()
 	if (FAILED(m_pShaderCom->Bind_Matrix("g_ProjMatrix", &m_pGameInstance->Get_Transform_Float4x4(CPipeLine::D3DTS_PROJ))))
 		return E_FAIL;
 
-	_uint		iNumMeshes = m_pModelCom->Get_MeshesCount();
+	_uint		iNumMeshes = m_pModelCom[m_eCurType]->Get_MeshesCount();
 
 	for (size_t i = 0; i < iNumMeshes; i++)
 	{	
 
-		if (FAILED(m_pModelCom->Bind_Material(m_pShaderCom, "g_DiffuseTexture", aiTextureType_DIFFUSE, i)))
+		if (FAILED(m_pModelCom[m_eCurType]->Bind_Material(m_pShaderCom, "g_DiffuseTexture", aiTextureType_DIFFUSE, i)))
 			return E_FAIL;
 
 		if (FAILED(m_pShaderCom->Begin(0)))
 			return E_FAIL;
 
-		if (FAILED(m_pModelCom->Render(i)))
+		if (FAILED(m_pModelCom[m_eCurType]->Render(i)))
 			return E_FAIL;
 	}
 
@@ -110,9 +110,14 @@ HRESULT CWeapon_Player::Ready_Components()
 
 
 	/* FOR.Com_Model */
-	if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Player_Weapon"),
-		TEXT("Com_Model"), reinterpret_cast<CComponent**>(&m_pModelCom))))
+	if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Player_Katana"),
+		TEXT("Com_Model"), reinterpret_cast<CComponent**>(&m_pModelCom[WEAPON_TYPE::KATANA]))))
 		return E_FAIL;
+
+	if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Player_Shuriken"),
+		TEXT("Com_Model"), reinterpret_cast<CComponent**>(&m_pModelCom[WEAPON_TYPE::SHURIKEN]))))
+		return E_FAIL;
+
 
 	return S_OK;
 }
@@ -150,5 +155,10 @@ void CWeapon_Player::Free()
 	__super::Free();
 
 	Safe_Release(m_pShaderCom);
-	Safe_Release(m_pModelCom);
+
+	for (_uint i = 0; i < WEAPON_TYPE::WEAPON_TYPE_END; i++)
+	{
+		Safe_Release(m_pModelCom[i]);
+	}
+	
 }

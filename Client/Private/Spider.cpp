@@ -43,25 +43,7 @@ HRESULT CSpider::Initialize(void* pArg)
 
 void CSpider::Priority_Update(_float fTimeDelta)
 {
-    if (m_strLayerName != L"Layer_PreView_Object")
-    {
-        _vector vPlayerPos = m_pPlayer->Get_Transform()->Get_State(CTransform::STATE_POSITION);
-        _vector vMyPos = m_pTransformCom->Get_State(CTransform::STATE_POSITION);
-
-        _float fPlayerPosX = XMVectorGetX(vPlayerPos);
-        _float fPlayerPosZ = XMVectorGetZ(vPlayerPos);
-
-        _float fMyPosX = XMVectorGetX(vMyPos);
-        _float fMyPosZ = XMVectorGetZ(vMyPos);
-
-
-        if (fabs(fPlayerPosX - fMyPosX) < 7.f && fabs(fPlayerPosZ - fMyPosZ) < 80.f)
-        {
-            m_pModel->SetUp_Animation(5, true);
-        }
-        else
-            m_pModel->SetUp_Animation(0, true);
-    }
+   
    
 }
 
@@ -69,47 +51,7 @@ void CSpider::Update(_float fTimeDelta)
 {
     __super::Update(fTimeDelta);
 
-    if (m_strLayerName == L"Layer_PreView_Object")
-    {
-        list<CGameObject*>& TerrainList = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_BackGround_Terrain");
-        if (TerrainList.empty())
-            return;
-
-
-        _float fClosestDistance = FLT_MAX;  // 가장 가까운 거리
-        CGameObject* pClosestTerrain = nullptr;  // 가장 가까운 지형
-
-        _vector vPreviewPosition = m_pTransformCom->Get_State(CTransform::STATE_POSITION); // PreView 오브젝트의 현재 위치
-
-        for (auto pTerrain : TerrainList)
-        {
-            _vector vTerrainPosition = pTerrain->Get_Transform()->Get_State(CTransform::STATE_POSITION); // 지형의 좌하단 위치
-
-            _vector vDifference = XMVectorSubtract((_fvector)vPreviewPosition, (_fvector)vTerrainPosition);
-
-
-            _float fDistance = XMVectorGetX(XMVector3Length(vDifference));
-
-            if (fDistance < fClosestDistance)
-            {
-                fClosestDistance = fDistance;
-                pClosestTerrain = pTerrain;
-            }
-
-        }
-
-        if (pClosestTerrain)
-        {
-            CLandObject::Set_TerrainVIBuffer(static_cast<CVIBuffer_Terrain*>(pClosestTerrain->Find_Component(L"Com_VIBuffer")));
-            CLandObject::Set_TerrainTransform(pClosestTerrain->Get_Transform());
-
-            // 오브젝트를 지형 위로 배치합니다.
-            CLandObject::SetUp_OnTerrain(m_pTransformCom, 0.5f);
-        }
-
-    }
-
-
+  
     m_pModel->Play_Animation(fTimeDelta);
 }
 
@@ -182,6 +124,11 @@ HRESULT CSpider::Ready_Component()
 
 
     return S_OK;
+}
+
+HRESULT CSpider::Ready_Parts()
+{
+    return E_NOTIMPL;
 }
 
 CSpider* CSpider::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)

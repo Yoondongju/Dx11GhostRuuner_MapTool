@@ -92,7 +92,7 @@ HRESULT CModel::Bind_Material(CShader* pShader, const _char* pConstantName, aiTe
 	if (nullptr != m_Materials[iMaterialIndex].pMaterialTextures[eMaterialType])
 		return m_Materials[iMaterialIndex].pMaterialTextures[eMaterialType]->Bind_ShaderResource(pShader, pConstantName, 0);
 	else
-		return S_OK;
+		return S_OK;	// 작업은 성공했지만 쉐이더에 던지지 못햇다면 
 }
 
 HRESULT CModel::Bind_MeshBoneMatrices(CShader* pShader, const _char* pConstantName, _uint iMeshIndex)
@@ -251,7 +251,9 @@ HRESULT CModel::Ready_Materials(const _char* pModelFilePath)
 			strcpy_s(szTexturePath, szDrive);
 			strcat_s(szTexturePath, szDirectory);
 			strcat_s(szTexturePath, szFileName);
-			strcat_s(szTexturePath, szExt);
+
+			//strcat_s(szTexturePath, szExt);		// << 원래꺼 png
+			strcat_s(szTexturePath, ".dds");			
 
 			_tchar				szFinalPath[MAX_PATH] = TEXT("");
 
@@ -261,7 +263,10 @@ HRESULT CModel::Ready_Materials(const _char* pModelFilePath)
 				
 			MeshMaterial.pMaterialTextures[j] = CTexture::Create(m_pDevice, m_pContext, szFinalPath, 1);
 			if (nullptr == MeshMaterial.pMaterialTextures[j])
-				return E_FAIL;
+			{
+				int a = 1;
+			}
+				
 		}
 
 		m_Materials.emplace_back(MeshMaterial);

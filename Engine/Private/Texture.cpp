@@ -61,7 +61,7 @@ HRESULT CTexture::Initialize_Prototype(const _tchar* pTextureFilePath, _uint iNu
 		}
 
 		if (FAILED(hr))
-			return E_FAIL;
+			return E_FAIL;		// << 텍스쳐 없어도 터지지않게
 
 		m_SRVs.emplace_back(pSRV);
 	}
@@ -92,7 +92,7 @@ CTexture* CTexture::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext,
 
 	if (FAILED(pInstance->Initialize_Prototype(pTextureFilePath, iNumTextures)))
 	{
-		MSG_BOX(TEXT("Failed to Created : CTexture"));
+		//MSG_BOX(TEXT("Failed to Created : CTexture"));
 		Safe_Release(pInstance);
 	}
 

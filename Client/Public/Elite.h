@@ -2,9 +2,7 @@
 
 
 #include "Client_Defines.h"
-#include "GameObject.h"
-
-
+#include "ContainerObject.h"
 
 
 BEGIN(Engine)
@@ -16,13 +14,15 @@ END
 
 BEGIN(Client)
 
-class CBuilding final : public CGameObject
+class CElite final : public CContainerObject
 {
-private:
-	CBuilding(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-	CBuilding(const CBuilding& Prototype);
-	virtual ~CBuilding() = default;
+public:
+	enum PARTID { PART_WEAPON, PART_END };
 
+private:
+	CElite(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+	CElite(const CElite& Prototype);
+	virtual ~CElite() = default;
 
 public:
 	class CModel* Get_Model() override { return m_pModel; }
@@ -41,15 +41,15 @@ private:
 	CModel*  m_pModel = { nullptr };
 
 
-	PxRigidStatic*	m_pRigidStatic = { nullptr };  // 정적 물체를 나타내는 PhysX 객체
-	PxTransform		m_Transform = {};     // 물리적 변환 정보 (위치와 회전)
+
 
 private:
 	HRESULT		Ready_Component();
-	
+	HRESULT		Ready_Parts();
+
 
 public:
-	static CBuilding* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+	static CElite* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual CGameObject* Clone(void* pArg);
 	virtual void Free() override;
 };

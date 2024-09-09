@@ -131,7 +131,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../Public/;../../EngineSDK/lib/</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../Public/;../../EngineSDK/Lib/</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderType>Effect</ShaderType>
@@ -162,20 +162,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\Private\Building.h" />
-    <ClInclude Include="..\Public\Aid_props.h" />
+    <ClInclude Include="..\Private\Static_Object.h" />
+    <ClInclude Include="..\Public\BackPack_Jetpack.h" />
+    <ClInclude Include="..\Public\Decorative_Object.h" />
     <ClInclude Include="..\Public\BackGround.h" />
     <ClInclude Include="..\Public\Body_Player.h" />
     <ClInclude Include="..\Public\Client_Defines.h" />
     <ClInclude Include="..\public\CMainApp.h" />
+    <ClInclude Include="..\Public\Dynamic_Object.h" />
+    <ClInclude Include="..\Public\Elite.h" />
     <ClInclude Include="..\Public\FreeCamera.h" />
+    <ClInclude Include="..\Public\Jetpack.h" />
     <ClInclude Include="..\Public\LandObject.h" />
     <ClInclude Include="..\Public\Level_GamePlay.h" />
     <ClInclude Include="..\Public\Level_Loading.h" />
     <ClInclude Include="..\Public\Level_Logo.h" />
     <ClInclude Include="..\Public\Level_MapTool.h" />
     <ClInclude Include="..\Public\Loader.h" />
+    <ClInclude Include="..\Public\Mira.h" />
     <ClInclude Include="..\Public\Monster.h" />
+    <ClInclude Include="..\Public\Pistol.h" />
     <ClInclude Include="..\Public\Player.h" />
     <ClInclude Include="..\Public\Player_Attack.h" />
     <ClInclude Include="..\Public\Player_Block.h" />
@@ -186,9 +192,14 @@
     <ClInclude Include="..\Public\Player_Run.h" />
     <ClInclude Include="..\Public\Player_Walk.h" />
     <ClInclude Include="..\Public\Sky.h" />
+    <ClInclude Include="..\Public\Sniper.h" />
     <ClInclude Include="..\Public\Spider.h" />
     <ClInclude Include="..\Public\Terrain.h" />
+    <ClInclude Include="..\Public\Weapon_Elite.h" />
+    <ClInclude Include="..\Public\Weapon_Jetpack.h" />
+    <ClInclude Include="..\Public\Weapon_Pistol.h" />
     <ClInclude Include="..\Public\Weapon_Player.h" />
+    <ClInclude Include="..\Public\Weapon_Sniper.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -222,10 +233,17 @@
     <ClCompile Include="..\..\Imgui\imgui_widgets.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\Private\Aid_props.cpp" />
+    <ClCompile Include="..\Private\BackPack_Jetpack.cpp" />
+    <ClCompile Include="..\Private\Decorative_Object.cpp" />
     <ClCompile Include="..\Private\BackGround.cpp" />
     <ClCompile Include="..\Private\Body_Player.cpp" />
-    <ClCompile Include="..\Private\Building.cpp" />
+    <ClCompile Include="..\Private\Dynamic_Object.cpp" />
+    <ClCompile Include="..\Private\Elite.cpp" />
+    <ClCompile Include="..\Private\Jetpack.cpp" />
+    <ClCompile Include="..\Private\Mira.cpp" />
+    <ClCompile Include="..\Private\Pistol.cpp" />
+    <ClCompile Include="..\Private\Sniper.cpp" />
+    <ClCompile Include="..\Private\Static_Object.cpp" />
     <ClCompile Include="..\private\CMainApp.cpp" />
     <ClCompile Include="..\Private\FreeCamera.cpp" />
     <ClCompile Include="..\Private\LandObject.cpp" />
@@ -247,7 +265,11 @@
     <ClCompile Include="..\Private\Sky.cpp" />
     <ClCompile Include="..\Private\Spider.cpp" />
     <ClCompile Include="..\Private\Terrain.cpp" />
+    <ClCompile Include="..\Private\Weapon_Elite.cpp" />
+    <ClCompile Include="..\Private\Weapon_Jetpack.cpp" />
+    <ClCompile Include="..\Private\Weapon_Pistol.cpp" />
     <ClCompile Include="..\Private\Weapon_Player.cpp" />
+    <ClCompile Include="..\Private\Weapon_Sniper.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
