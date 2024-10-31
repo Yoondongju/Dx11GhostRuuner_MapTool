@@ -32,7 +32,9 @@ HRESULT CStatic_Object::Initialize(void* pArg)
 {
     __super::Initialize(pArg);
 
-    if (FAILED(Ready_Component()))
+    _bool bFinalMapCheck = *static_cast<_bool*>(pArg);
+
+    if (FAILED(Ready_Component(bFinalMapCheck)))
         return E_FAIL;
 
 
@@ -73,6 +75,16 @@ void CStatic_Object::Late_Update(_float fTimeDelta)
 
 HRESULT CStatic_Object::Render()
 {
+    if (m_strLayerName == L"Layer_Map")
+    {
+        _float4x4 WorldMatrix = {};
+        _matrix Matrix = XMMatrixIdentity();
+
+        XMStoreFloat4x4(&WorldMatrix, Matrix);
+        m_pTransformCom->Set_WorldMatrix(WorldMatrix);
+    }
+       
+
     if (FAILED(m_pTransformCom->Bind_ShaderResource(m_pShaderCom, "g_WorldMatrix")))
         return E_FAIL;
 
@@ -84,9 +96,9 @@ HRESULT CStatic_Object::Render()
         return E_FAIL;
 
 
-    _float fAlpha = 0.7f;
-    if (FAILED(m_pShaderCom->Bind_RawValue("g_fAlpha", &fAlpha, sizeof(_float))))
-        return E_FAIL;
+    //_float fAlpha = 0.7f;
+    //if (FAILED(m_pShaderCom->Bind_RawValue("g_fAlpha", &fAlpha, sizeof(_float))))
+    //    return E_FAIL;
 
 
     if (m_pModel)
@@ -114,12 +126,25 @@ HRESULT CStatic_Object::Render()
     return S_OK;
 }
 
-HRESULT CStatic_Object::Ready_Component()
+HRESULT CStatic_Object::Ready_Component(_bool  isFinalMap)
 {
     /* FOR.Com_Shader */
     if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Shader_VtxMeshTex"),
         TEXT("Com_Shader"), reinterpret_cast<CComponent**>(&m_pShaderCom))))
         return E_FAIL;
+
+    if (true == isFinalMap)
+    {
+        if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, L"Prototype_Component_MapModel",
+            TEXT("Com_Model"), reinterpret_cast<CComponent**>(&m_pModel), nullptr)))
+            return E_FAIL;
+
+        MSG_BOX(L"최종 맵모델을 하나의 Static_Object로 생성 완료했습니다.\n 이 오브젝트는 추후 저장과 관계없는 오브젝트로 간주됩니다.\n와이어,클라이밍을 설치하기위한 위치확인용으로 깔아두는것입니다\n본게임 클라에선 다르게 파싱할거입니당");
+        return S_OK;
+    }
+
+
+
 
 
     CLevel_MapTool::MODEL_CHECK_LIST eType = (CLevel_MapTool::MODEL_CHECK_LIST)Get_ModelListType();

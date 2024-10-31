@@ -18,7 +18,7 @@ BEGIN(Client)
 class CLevel_MapTool final : public CLevel
 {
 public:
-	enum MAIN_CHECK_TYPE { TERRAIN, OBJECT, CAMERA , NAVIGATION,MAIN_CHECK_TYPE_END};
+	enum MAIN_CHECK_TYPE { TERRAIN, OBJECT, CAMERA , NAVIGATION, OTHER_MESH, MAIN_CHECK_TYPE_END};
 	enum OBJECT_TYPE
 	{
 		DECORATIVE_OBJECT,
@@ -36,7 +36,7 @@ public:
 		BOSS_FIGHT1,
 		BOSS_FIGHT3,
 		CATWALK,
-		CRANE,
+		CRANE,						// 내가 상호작용 해야할 오브젝트는 별개로 분리해야해  ex) 벽타기, 와이어, 파쿠르 해야할 오브젝트
 		CYBERCITY,
 		DECO,
 		FAN,
@@ -61,12 +61,13 @@ public:
 		MIRA,
 		PISTOL,
 		SNIPER,
+		HEL,
 
 		ETC, 
 		MODEL_CHECK_TYPE_END
 	};
 
-
+	
 public:
 	typedef struct
 	{
@@ -133,7 +134,7 @@ private:
 private:
 	HRESULT Ready_Camera();
 	HRESULT	Ready_ImGui();
-
+	HRESULT	Ready_Light();
 	HRESULT Ready_Object();
 
 	void    ImGui_Render();					// 기본 ImGui
@@ -164,7 +165,7 @@ private:
 	void Open_UIDialog();				// UI
 
 
-
+	void Open_OtherModel();			
 
 
 
@@ -176,6 +177,13 @@ private:
 	void Save_AnimObject();
 
 	void Save_Navigation();
+
+	void Save_OtherModel();
+	void Save_FinalMap();
+
+
+
+
 
 private:
 	void Save_NonAnimObject_MapTool();
@@ -190,14 +198,16 @@ private:
 	void Load_Map();
 
 	void Load_Terrain();
-	void Load_NonAnimObject_MapTool();
+
+	void Load_Final_Map_MapTool();
+	void Load_NonAnimObject_MapTool();		
 	void Load_AnimObject_MapTool();
 	
 	void Load_Navigation();
 
 
 	void ReadString(ifstream& fin, string& str);
-
+	void ReadString(FILE* file, string& str);
 
 
 

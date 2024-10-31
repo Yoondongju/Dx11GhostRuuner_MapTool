@@ -1,34 +1,36 @@
 #include "stdafx.h"
-#include "Sniper.h"
+#include "Hel.h"
 #include "GameInstance.h"
 
 #include "FreeCamera.h"
 
 #include "Level_MapTool.h"
 
-#include "Weapon_Sniper.h"
+#include "Weapon_Hel.h"
 
-CSniper::CSniper(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+
+
+CHel::CHel(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     : CContainerObject(pDevice, pContext)
 {
 
 }
 
 
-CSniper::CSniper(const CSniper& Prototype)
+CHel::CHel(const CHel& Prototype)
     : CContainerObject(Prototype)
 {
 
 }
 
 
-HRESULT CSniper::Initialize_Prototype()
+HRESULT CHel::Initialize_Prototype()
 {
     return S_OK;
 }
 
 
-HRESULT CSniper::Initialize(void* pArg)
+HRESULT CHel::Initialize(void* pArg)
 {
     __super::Initialize(pArg);
 
@@ -43,17 +45,18 @@ HRESULT CSniper::Initialize(void* pArg)
     return S_OK;
 }
 
-void CSniper::Priority_Update(_float fTimeDelta)
+void CHel::Priority_Update(_float fTimeDelta)
 {
-   
+
     for (auto& pPartObject : m_Parts)
         pPartObject->Priority_Update(fTimeDelta);
 }
 
-void CSniper::Update(_float fTimeDelta)
+void CHel::Update(_float fTimeDelta)
 {
     __super::Update(fTimeDelta);
 
+    m_pModel->SetUp_Animation(5, true);
 
     m_pModel->Play_Animation(fTimeDelta);
 
@@ -61,7 +64,7 @@ void CSniper::Update(_float fTimeDelta)
         pPartObject->Update(fTimeDelta);
 }
 
-void CSniper::Late_Update(_float fTimeDelta)
+void CHel::Late_Update(_float fTimeDelta)
 {
     if (m_strLayerName == L"Layer_PreView_Object")
     {
@@ -71,11 +74,12 @@ void CSniper::Late_Update(_float fTimeDelta)
     else
         m_pGameInstance->Add_RenderObject(CRenderer::RG_NONBLEND, this);
 
+
     for (auto& pPartObject : m_Parts)
         pPartObject->Late_Update(fTimeDelta);
 }
 
-HRESULT CSniper::Render()
+HRESULT CHel::Render()
 {
     if (FAILED(m_pTransformCom->Bind_ShaderResource(m_pShaderCom, "g_WorldMatrix")))
         return E_FAIL;
@@ -114,7 +118,7 @@ HRESULT CSniper::Render()
     return S_OK;
 }
 
-HRESULT CSniper::Ready_Component()
+HRESULT CHel::Ready_Component()
 {
     /* FOR.Com_Shader */
     if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Shader_VtxAnimModel"),
@@ -123,10 +127,8 @@ HRESULT CSniper::Ready_Component()
 
 
 
-
-
     /* For.Com_VIBuffer */
-    if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Sniper"),
+    if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Hel"),
         TEXT("Com_Model"), reinterpret_cast<CComponent**>(&m_pModel), nullptr)))
         return E_FAIL;
 
@@ -134,49 +136,48 @@ HRESULT CSniper::Ready_Component()
     return S_OK;
 }
 
-HRESULT CSniper::Ready_Parts()
+HRESULT CHel::Ready_Parts()
 {
     m_Parts.resize(PART_END);
 
-
-    CWeapon_Sniper::WEAPON_DESC		WeaponDesc{};
+    CWeapon_Hel::WEAPON_DESC		WeaponDesc{};
     WeaponDesc.pParentWorldMatrix = m_pTransformCom->Get_WorldMatrix_Ptr();
-    WeaponDesc.pSocketBoneMatrix = m_pModel->Get_BoneCombindTransformationMatrix_Ptr("Gun_r");
+    WeaponDesc.pSocketBoneMatrix = m_pModel->Get_BoneCombindTransformationMatrix_Ptr("weapon_bone");
     WeaponDesc.pOwner = this;
     WeaponDesc.InitWorldMatrix = XMMatrixIdentity();
-    if (FAILED(__super::Add_PartObject(PART_WEAPON, TEXT("Prototype_GameObject_Weapon_Sniper"), &WeaponDesc)))
+    if (FAILED(__super::Add_PartObject(PART_WEAPON, TEXT("Prototype_GameObject_Weapon_Hel"), &WeaponDesc)))
         return E_FAIL;
 
     return S_OK;
 }
 
-CSniper* CSniper::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+CHel* CHel::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-    CSniper* pInstance = new CSniper(pDevice, pContext);
+    CHel* pInstance = new CHel(pDevice, pContext);
 
     if (FAILED(pInstance->Initialize_Prototype()))
     {
-        MSG_BOX(TEXT("Failed to Created : CSniper"));
+        MSG_BOX(TEXT("Failed to Created : CHel"));
         Safe_Release(pInstance);
     }
 
     return pInstance;
 }
 
-CGameObject* CSniper::Clone(void* pArg)
+CGameObject* CHel::Clone(void* pArg)
 {
-    CSniper* pInstance = new CSniper(*this);
+    CHel* pInstance = new CHel(*this);
 
     if (FAILED(pInstance->Initialize(pArg)))
     {
-        MSG_BOX(TEXT("Failed to Cloned : CSniper"));
+        MSG_BOX(TEXT("Failed to Cloned : CHel"));
         Safe_Release(pInstance);
     }
 
     return pInstance;
 }
 
-void CSniper::Free()
+void CHel::Free()
 {
     __super::Free();
 

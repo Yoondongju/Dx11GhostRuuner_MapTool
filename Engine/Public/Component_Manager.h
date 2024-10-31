@@ -43,9 +43,10 @@ private:
 	map<const _wstring, class CComponent*>*		m_pPrototype = { nullptr };
 	_uint										m_iNumLevels = { 0 };
 
-private:
+public:
 	class CComponent* Find_Prototype(_uint iNumLevelIndex, const _wstring& strPrototypeTag);
-	
+	_bool IsFind_Model(_uint iLevelIndex, const _wstring& strModelPrototypeName);
+
 public:
 	static CComponent_Manager* Create(_uint iNumLevels);
 	virtual void Free() override;

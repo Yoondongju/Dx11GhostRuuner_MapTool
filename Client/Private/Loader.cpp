@@ -23,6 +23,7 @@
 
 #include "Elite.h"
 #include "Weapon_Elite.h"
+#include "Weapon_Hel.h"
 
 #include "Jetpack.h"
 #include "Weapon_Jetpack.h"
@@ -35,6 +36,8 @@
 
 #include "Sniper.h"
 #include "Weapon_Sniper.h"
+
+#include "Hel.h"
 
 
 CLoader::CLoader(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
@@ -135,6 +138,8 @@ HRESULT CLoader::Ready_Resources_For_MapToolLevel()
 	if (FAILED(Ready_ObjectPrototype()))
 		return E_FAIL;
 
+	if (FAILED(Ready_Other_Model()))
+		return E_FAIL;
 
 
 	lstrcpy(m_szLoadingText, TEXT("로딩이 완료되었습니다."));
@@ -848,12 +853,15 @@ HRESULT CLoader::Ready_Monster_Model()
 
 	///* For. Prototype_Component_Model_Monster_Spider*/
 	_matrix		PreTransformMatrix = XMMatrixIdentity();
-	PreTransformMatrix = XMMatrixScaling(0.1f, 0.1f, 0.1f);
+	PreTransformMatrix = XMMatrixScaling(0.1f, 0.1f, 0.1f) * XMMatrixRotationY(XMConvertToRadians(180.0f));
 
 	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Spider"),
 		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_ANIM, "../Bin/Ghostrunner/Monster/Spider.fbx", PreTransformMatrix))))
 		return E_FAIL;
 
+	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Hel"),
+		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_ANIM, "../Bin/Ghostrunner/Monster/Hel/BossHel.fbx", PreTransformMatrix))))
+		return E_FAIL;
 
 	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Elite"),
 		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_ANIM, "../Bin/Ghostrunner/Monster/Elite/Elite.fbx", PreTransformMatrix))))
@@ -863,19 +871,19 @@ HRESULT CLoader::Ready_Monster_Model()
 		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_ANIM, "../Bin/Ghostrunner/Monster/Jetpack/Jetpack.fbx", PreTransformMatrix))))
 		return E_FAIL;
 
+	PreTransformMatrix = XMMatrixScaling(0.1f, 0.1f, 0.1f);
 	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Jetpack_Back"),
 		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Monster/Jetpack/Jetpack_Back.fbx", PreTransformMatrix))))
 		return E_FAIL;
 
-	
+	PreTransformMatrix = XMMatrixScaling(0.1f, 0.1f, 0.1f);
 	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Jetpack_Roket"),
 		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Monster/Jetpack/Jetpack_roket.fbx", PreTransformMatrix))))
 		return E_FAIL;
 
 
 
-
-	PreTransformMatrix = XMMatrixScaling(0.1f, 0.1f, 0.1f);
+	PreTransformMatrix = XMMatrixScaling(0.1f, 0.1f, 0.1f) * XMMatrixRotationY(XMConvertToRadians(180.0f));
 	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Mira"),
 		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_ANIM, "../Bin/Ghostrunner/Monster/mira/mira.fbx", PreTransformMatrix))))
 		return E_FAIL;
@@ -894,7 +902,7 @@ HRESULT CLoader::Ready_Monster_Model()
 		return E_FAIL;
 
 
-	PreTransformMatrix = XMMatrixScaling(0.1f, 0.1f, 0.1f);
+	PreTransformMatrix = XMMatrixScaling(0.1f, 0.1f, 0.1f) * XMMatrixRotationY(XMConvertToRadians(180.0f));
 	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Sniper"),
 		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_ANIM, "../Bin/Ghostrunner/Monster/sniper/sniper.fbx", PreTransformMatrix))))
 		return E_FAIL;
@@ -905,6 +913,75 @@ HRESULT CLoader::Ready_Monster_Model()
 		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Monster/sniper/sniper_gun.fbx", PreTransformMatrix))))
 		return E_FAIL;
 
+
+
+	return S_OK;
+}
+
+HRESULT CLoader::Ready_Other_Model()
+{
+	lstrcpy(m_szLoadingText, TEXT("Other_Model을(를) 로딩중입니다."));
+
+
+	///* For. Prototype_Component_Model_Monster_Spider*/
+	_matrix		PreTransformMatrix = XMMatrixIdentity();
+	PreTransformMatrix = XMMatrixScaling(0.1f, 0.1f, 0.1f);
+
+
+	//if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_MapModel"),
+	//	CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/MapData/Map_Stage1.fbx", PreTransformMatrix))))
+	//	return E_FAIL;
+
+	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_MapModel"),
+		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/MapData/CyberCityset1.fbx", PreTransformMatrix))))
+		return E_FAIL;
+
+	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Sky"),
+		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Sky/sky1.fbx", PreTransformMatrix))))
+		return E_FAIL;
+
+
+
+
+
+	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Blood1"),
+		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Blood/Blood1.fbx", PreTransformMatrix))))
+		return E_FAIL;
+
+	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Piece"),
+		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Piece/Piece.fbx", PreTransformMatrix))))
+		return E_FAIL;
+	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Electric"),
+		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Electric.fbx", PreTransformMatrix))))
+		return E_FAIL;
+	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_BigElectric"),
+		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/BigElectric.fbx", PreTransformMatrix))))
+		return E_FAIL;
+
+
+	PreTransformMatrix = XMMatrixScaling(0.06f, 0.06f, 0.06f) * XMMatrixRotationX(XMConvertToRadians(180.0f));
+	if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Bullet"),
+		CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Bullet/Bullet.fbx", PreTransformMatrix))))
+		return E_FAIL;
+
+	//if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Blood2"),
+	//	CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Blood/Blood2.fbx", PreTransformMatrix))))
+	//	return E_FAIL;
+	//
+	//if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Blood3"),
+	//	CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Blood/Blood3.fbx", PreTransformMatrix))))
+	//	return E_FAIL;
+	//
+	//if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Blood4"),
+	//	CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Blood/Blood4.fbx", PreTransformMatrix))))
+	//	return E_FAIL;
+	//
+	//if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_MAPTOOL, TEXT("Prototype_Component_Blood5"),
+	//	CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, "../Bin/Ghostrunner/Blood/Blood5.fbx", PreTransformMatrix))))
+	//	return E_FAIL;
+
+
+	
 
 
 	return S_OK;
@@ -986,7 +1063,16 @@ HRESULT CLoader::Ready_ObjectPrototype()
 
 
 
+
+
 	// 실제 몬스터 클래스 타입별 객체원형 
+	if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Hel"),
+		CHel::Create(m_pDevice, m_pContext))))
+		return E_FAIL;
+	if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Weapon_Hel"),
+		CWeapon_Hel::Create(m_pDevice, m_pContext))))
+		return E_FAIL;
+
 	if (FAILED(m_pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Spider"),
 		CSpider::Create(m_pDevice, m_pContext))))
 		return E_FAIL;

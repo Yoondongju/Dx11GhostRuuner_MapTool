@@ -145,6 +145,18 @@
     <Filter Include="01.Utility\04.Components\VIBuffer\Cell">
       <UniqueIdentifier>{0fbbabf9-23ef-42ae-989c-b9844a59dad3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="01.Utility\08.RenderTarget">
+      <UniqueIdentifier>{97083e42-1e81-427b-86c8-d4442b0ff251}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="01.Utility\08.RenderTarget\Manager">
+      <UniqueIdentifier>{b57052f7-f746-4443-9796-90aa92ebcbe6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="01.Utility\07.Lights">
+      <UniqueIdentifier>{0ccf072b-076d-46ae-8e81-4561dce9fda3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="01.Utility\07.Lights\Manager">
+      <UniqueIdentifier>{72124574-6964-4d28-90d5-18a8d9154276}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Public\Engine_Defines.h">
@@ -293,6 +305,18 @@
     <ClInclude Include="..\Public\VIBuffer_Cell.h">
       <Filter>01.Utility\04.Components\VIBuffer\Cell</Filter>
     </ClInclude>
+    <ClInclude Include="..\Public\Target_Manager.h">
+      <Filter>01.Utility\08.RenderTarget\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\RenderTarget.h">
+      <Filter>01.Utility\08.RenderTarget</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Light_Manager.h">
+      <Filter>01.Utility\07.Lights\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Light.h">
+      <Filter>01.Utility\07.Lights</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\private\Base.cpp">
@@ -433,6 +457,18 @@
     <ClCompile Include="..\Private\VIBuffer_Cell.cpp">
       <Filter>01.Utility\04.Components\VIBuffer\Cell</Filter>
     </ClCompile>
+    <ClCompile Include="..\Private\RenderTarget.cpp">
+      <Filter>01.Utility\08.RenderTarget</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Target_Manager.cpp">
+      <Filter>01.Utility\08.RenderTarget\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Light_Manager.cpp">
+      <Filter>01.Utility\07.Lights\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Light.cpp">
+      <Filter>01.Utility\07.Lights</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />
@@ -441,5 +477,13 @@
     <FxCompile Include="..\Bin\ShaderFiles\Shader_Cell.hlsl">
       <Filter>01.Utility\97.ShaderFiles</Filter>
     </FxCompile>
+    <FxCompile Include="..\Bin\ShaderFiles\Shader_Deferred.hlsl">
+      <Filter>01.Utility\97.ShaderFiles</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Bin\ShaderFiles\Shader_Engine_Defines.hlsli">
+      <Filter>01.Utility\97.ShaderFiles</Filter>
+    </None>
   </ItemGroup>
 </Project>

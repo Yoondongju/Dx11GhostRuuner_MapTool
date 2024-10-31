@@ -172,6 +172,7 @@
     <ClInclude Include="..\Public\Dynamic_Object.h" />
     <ClInclude Include="..\Public\Elite.h" />
     <ClInclude Include="..\Public\FreeCamera.h" />
+    <ClInclude Include="..\Public\Hel.h" />
     <ClInclude Include="..\Public\Jetpack.h" />
     <ClInclude Include="..\Public\LandObject.h" />
     <ClInclude Include="..\Public\Level_GamePlay.h" />
@@ -196,6 +197,7 @@
     <ClInclude Include="..\Public\Spider.h" />
     <ClInclude Include="..\Public\Terrain.h" />
     <ClInclude Include="..\Public\Weapon_Elite.h" />
+    <ClInclude Include="..\Public\Weapon_Hel.h" />
     <ClInclude Include="..\Public\Weapon_Jetpack.h" />
     <ClInclude Include="..\Public\Weapon_Pistol.h" />
     <ClInclude Include="..\Public\Weapon_Player.h" />
@@ -239,6 +241,7 @@
     <ClCompile Include="..\Private\Body_Player.cpp" />
     <ClCompile Include="..\Private\Dynamic_Object.cpp" />
     <ClCompile Include="..\Private\Elite.cpp" />
+    <ClCompile Include="..\Private\Hel.cpp" />
     <ClCompile Include="..\Private\Jetpack.cpp" />
     <ClCompile Include="..\Private\Mira.cpp" />
     <ClCompile Include="..\Private\Pistol.cpp" />
@@ -266,6 +269,7 @@
     <ClCompile Include="..\Private\Spider.cpp" />
     <ClCompile Include="..\Private\Terrain.cpp" />
     <ClCompile Include="..\Private\Weapon_Elite.cpp" />
+    <ClCompile Include="..\Private\Weapon_Hel.cpp" />
     <ClCompile Include="..\Private\Weapon_Jetpack.cpp" />
     <ClCompile Include="..\Private\Weapon_Pistol.cpp" />
     <ClCompile Include="..\Private\Weapon_Player.cpp" />

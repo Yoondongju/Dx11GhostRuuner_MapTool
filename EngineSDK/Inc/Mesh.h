@@ -11,6 +11,40 @@ BEGIN(Engine)
 
 class ENGINE_DLL CMesh final : public CVIBuffer
 {
+public:
+	typedef struct
+	{
+		_uint		iMaterialIndex = 0;
+		_uint		iNumVertices = 0;
+		_uint		iVertexStride = 0;
+
+		VTXMESH* pVertices = nullptr;
+		VTXANIMMESH* pAnimVertices = nullptr;
+		_uint* pIndices = nullptr;
+
+		_uint		iNumIndices = 0;
+		_uint		iIndexStride = 0;
+		_uint		eIndexFormat = {};
+		_uint		eTopology = {};
+
+		_float3		vMinPos = {};
+		_float3		vMaxPos = {};
+
+		//  아래부턴 Anim Mesh를 위한 정보
+
+		_char		 pName[MAX_PATH] = { "" };
+		_uint		 iNumAffectBones = {};
+
+		vector<_uint> vecIndices;
+		vector<_float4x4> vecOffsetMatrix;
+
+
+		_bool		isInstanceObject = { false };	// 인스턴싱 할 오브젝트니?
+		_wstring	InstanceBufferPrototypeTag = L"";
+
+	}MESH_DESC;
+
+
 private:
 	CMesh(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	CMesh(const CMesh& Prototype);
@@ -58,6 +92,8 @@ public:
 
 public:
 	virtual HRESULT Initialize_Prototype(const CModel* pModel, CModel::MODEL_TYPE eType  ,const aiMesh* pAIMesh, _fmatrix PreTransformMatrix);
+	HRESULT Initialize_Prototype(CModel* pModel, CModel::MODEL_TYPE eModelType, _fmatrix PreTransformMatrix, void* pArg);
+
 	virtual HRESULT Initialize(void* pArg) override;
 
 
@@ -104,13 +140,18 @@ private:
 	class CVIBuffer_Cube*		m_pVIBuffer = { nullptr };	// 큐브
 
 
-private:
+private:			// 어심푸를 통한 로드
 	HRESULT		Ready_VertexBuffer_NonAnim(const aiMesh* pAIMesh, _fmatrix PreTransformMatrix);
 	HRESULT		Ready_VertexBuffer_Anim(const CModel* pModel, const aiMesh* pAIMesh);
+
+private:			// 바이너리화를 통한 로드
+	HRESULT		Ready_VertexBuffer_NonAnim(void* pArg, _fmatrix PreTransformMatrix);
+
 
 
 public:
 	static CMesh* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const CModel* pModel , CModel::MODEL_TYPE eType ,const aiMesh* pAIMesh, _fmatrix PreTransformMatrix);
+	static CMesh* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, CModel* pModel, CModel::MODEL_TYPE eModelType, _fmatrix PreTransformMatrix, void* pArg);
 	virtual CComponent* Clone(void* pArg);
 	virtual void Free() override;
 };

@@ -143,6 +143,46 @@ HRESULT CModel::Initialize_Prototype(MODEL_TYPE eType, const _char* pModelFilePa
 	return S_OK;
 }
 
+HRESULT CModel::Initialize_Prototype(MODEL_TYPE eType, const _char* pModelFilePath, _wstring* pMaterialTexturesPath, _uint iNumMeshes, _uint iMaterialsCount, _fmatrix PreTransformMatrix, void* pInitMeshArg, void* pInitBoneArg, void* pInitAnimationArg)
+{
+	_uint		iFlag = { 0 };
+
+
+
+	iFlag = aiProcess_ConvertToLeftHanded | aiProcessPreset_TargetRealtime_Fast;
+
+
+	XMStoreFloat4x4(&m_PreTransformMatrix, PreTransformMatrix);
+
+	m_eModelType = eType;
+	m_iNumMaterials = iMaterialsCount;
+
+
+	if (FAILED(Ready_Meshes(iNumMeshes, m_eModelType, pInitMeshArg)))
+		return E_FAIL;
+
+	if (FAILED(Ready_Materials(pModelFilePath, pMaterialTexturesPath)))
+		return E_FAIL;
+
+	//if (TYPE_ANIM == m_eModelType)
+	//{
+	//	if (FAILED(Ready_Animation(static_cast<CAnimation::ANIMATION_DESC*>(pInitAnimationArg))))
+	//		return E_FAIL;
+	//
+	//}
+	//
+	//
+	//m_KeyFrameIndices.resize(m_iNumAnimations);
+	//
+	//for (size_t i = 0; i < m_iNumAnimations; i++)
+	//{
+	//	_uint iNumChannel = m_Animations[i]->Get_NumChannel();
+	//	m_KeyFrameIndices[i].resize(iNumChannel);
+	//}
+
+	return S_OK;
+}
+
 HRESULT CModel::Initialize(void* pArg)
 {
 
@@ -311,11 +351,72 @@ HRESULT CModel::Ready_Animation()
 	return S_OK;
 }
 
+HRESULT CModel::Ready_Meshes(_uint iNumMeshes, MODEL_TYPE eModelType, void* pArg)
+{
+	m_iNumMeshes = iNumMeshes;
+	CMesh::MESH_DESC* pDesc = static_cast<CMesh::MESH_DESC*>(pArg);
+	if (nullptr == pDesc)
+	{
+		MSG_BOX(L"모델:메쉬 생성에 문제가 있습니다.");
+		return E_FAIL;
+	}
+
+	for (size_t i = 0; i < m_iNumMeshes; i++)
+	{
+		CMesh* pMesh = CMesh::Create(m_pDevice, m_pContext, this, eModelType, XMLoadFloat4x4(&m_PreTransformMatrix), (void*)&pDesc[i]);
+		if (nullptr == pMesh)
+			return E_FAIL;
+
+		m_Meshes.emplace_back(pMesh);
+	}
+
+	return S_OK;
+}
+
+HRESULT CModel::Ready_Materials(const _char* pModelFilePath, _wstring* pMaterialTexturesPath)
+{
+	for (size_t i = 0; i < m_iNumMaterials; i++)
+	{
+
+		MESH_MATERIAL		MeshMaterial{};
+		_wstring strSrc = L"NO_PATH";
+
+		for (size_t j = 1; j < AI_TEXTURE_TYPE_MAX; j++)
+		{
+			if (pMaterialTexturesPath[i * AI_TEXTURE_TYPE_MAX + j] == strSrc)
+				continue;
+
+			MeshMaterial.pMaterialTextures[j] = CTexture::Create(m_pDevice, m_pContext, pMaterialTexturesPath[i * AI_TEXTURE_TYPE_MAX + j].c_str(), 1);
+			if (nullptr == MeshMaterial.pMaterialTextures[j])
+			{
+				int  a = 1;
+			}
+		}
+
+		m_Materials.emplace_back(MeshMaterial);
+	}
+
+	return S_OK;
+}
+
 CModel* CModel::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, MODEL_TYPE eType, const _char* pModelFilePath, _fmatrix PreTransformMatrix)
 {
 	CModel* pInstance = new CModel(pDevice, pContext);
 
 	if (FAILED(pInstance->Initialize_Prototype(eType, pModelFilePath, PreTransformMatrix)))
+	{
+		MSG_BOX(TEXT("Failed to Created : CModel"));
+		Safe_Release(pInstance);
+	}
+
+	return pInstance;
+}
+
+CModel* CModel::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, MODEL_TYPE eType, const _char* pModelFilePath, _wstring* pMaterialTexturesPath, _uint iNumMeshes, _uint iMaterialsCount, _fmatrix PreTransformMatrix, void* pInitMeshArg, void* pInitBoneArg, void* pInitAnimationArg)
+{
+	CModel* pInstance = new CModel(pDevice, pContext);
+
+	if (FAILED(pInstance->Initialize_Prototype(eType, pModelFilePath, pMaterialTexturesPath, iNumMeshes, iMaterialsCount, PreTransformMatrix, pInitMeshArg, pInitBoneArg, pInitAnimationArg)))
 	{
 		MSG_BOX(TEXT("Failed to Created : CModel"));
 		Safe_Release(pInstance);

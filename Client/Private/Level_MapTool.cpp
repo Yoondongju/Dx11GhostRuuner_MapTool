@@ -78,6 +78,9 @@ CLevel_MapTool::CLevel_MapTool(ID3D11Device* pDevice, ID3D11DeviceContext* pCont
 
 HRESULT CLevel_MapTool::Initialize()
 {
+    if (FAILED(Ready_Light()))
+        return E_FAIL;
+
     if (FAILED(Ready_Camera()))
         return E_FAIL;
 
@@ -101,6 +104,43 @@ HRESULT CLevel_MapTool::Initialize()
     return S_OK;
 }
 
+
+HRESULT CLevel_MapTool::Ready_Light()
+{
+    LIGHT_DESC			LightDesc{};
+
+    ZeroMemory(&LightDesc, sizeof LightDesc);
+    LightDesc.eType = LIGHT_DESC::TYPE_DIRECTIONAL;
+    LightDesc.vDirection = _float4(1.f, -1.f, 1.f, 0.f);
+    LightDesc.vDiffuse = _float4(0.6f, 0.6f, 0.6f, 1.f);
+    LightDesc.vAmbient = _float4(1.f, 1.f, 1.f, 1.f);
+    LightDesc.vSpecular = _float4(1.f, 1.f, 1.f, 1.f);
+
+    if (FAILED(m_pGameInstance->Add_Light(LightDesc)))
+        return E_FAIL;
+
+    ZeroMemory(&LightDesc, sizeof LightDesc);
+    LightDesc.eType = LIGHT_DESC::TYPE_POINT;
+    LightDesc.vPosition = _float4(10.f, 3.f, 10.f, 1.f);
+    LightDesc.fRange = 7.f;
+    LightDesc.vDiffuse = _float4(1.f, 0.f, 0.f, 1.f);
+    LightDesc.vAmbient = /*_float4(0.4f, 0.2f, 0.2f, 1.f);*/_float4(0.f, 0.f, 0.f, 0.f);
+    LightDesc.vSpecular = LightDesc.vDiffuse;
+
+    if (FAILED(m_pGameInstance->Add_Light(LightDesc)))
+        return E_FAIL;
+
+    ZeroMemory(&LightDesc, sizeof LightDesc);
+    LightDesc.eType = LIGHT_DESC::TYPE_POINT;
+    LightDesc.vPosition = _float4(20.f, 3.f, 10.f, 1.f);
+    LightDesc.fRange = 7.f;
+    LightDesc.vDiffuse = _float4(0.f, 1.f, 0.f, 1.f);
+    LightDesc.vAmbient = /*_float4(0.2f, 0.4f, 0.2f, 1.f);*/_float4(0.f, 0.f, 0.f, 0.f);
+    LightDesc.vSpecular = LightDesc.vDiffuse;
+
+    if (FAILED(m_pGameInstance->Add_Light(LightDesc)))
+        return E_FAIL;
+}
 
 HRESULT CLevel_MapTool::Ready_ImGui()
 {
@@ -146,7 +186,7 @@ HRESULT CLevel_MapTool::Ready_Camera()
     Desc.vAt = _float4(0.f, 0.f, 0.f, 1.f);
     Desc.fFovy = XMConvertToRadians(90.0f);
     Desc.fNear = 0.1f;
-    Desc.fFar = 1000.f;
+    Desc.fFar = 4000.f;
     Desc.fSpeedPerSec = 30.f;
     Desc.fRotationPerSec = XMConvertToRadians(90.0f);
     Desc.fAspect = (_float)g_iWinSizeX / g_iWinSizeY;
@@ -323,7 +363,7 @@ void CLevel_MapTool::Update(_float fTimeDelta)
         }
     }
 
-    if (m_pGameInstance->Get_KeyState(KEY::CTRL) == KEY_STATE::HOLD && m_pGameInstance->Get_KeyState(KEY::LBUTTON) == KEY_STATE::TAP)
+    if (m_pGameInstance->Get_KeyState(KEY::CTRL) == KEY_STATE::TAP)
     {
         if (nullptr == m_pPickedObj)
         {
@@ -641,6 +681,9 @@ void CLevel_MapTool::ImGui_Render()
     case Client::CLevel_MapTool::NAVIGATION:
         Open_NavigationDialog();
         break;
+    case Client::CLevel_MapTool::OTHER_MESH:
+        Open_OtherModel();
+        break;
     case Client::CLevel_MapTool::MAIN_CHECK_TYPE_END:
         break;
     default:
@@ -942,6 +985,17 @@ void CLevel_MapTool::Open_ObjectDialog()
         }
         bFirstCall = true;
     }
+
+
+    if (ImGui::Button(u8"최종 Map 불러오기"))
+    {
+        _bool FinalMap = true;
+        if (FAILED(m_pGameInstance->Add_CloneObject_ToLayer(LEVEL_MAPTOOL, L"Layer_Map", L"Prototype_GameObject_Static_Object", &FinalMap)))
+            assert(nullptr);
+    }
+
+
+
 
 
     ImGui::Dummy(ImVec2(0.0f, 10.0f)); // 높이가 10인 빈 공간 추가
@@ -1541,6 +1595,13 @@ void CLevel_MapTool::Open_ObjectDialog()
             m_eModelCheckType = MODEL_CHECK_LIST::SNIPER;
             iSelectKit = 5;
         }
+
+        label = "Hel";
+        if (ImGui::RadioButton(label.c_str(), iSelectKit == 6))
+        {
+            m_eModelCheckType = MODEL_CHECK_LIST::HEL;
+            iSelectKit = 6;
+        }
         
       
 
@@ -1563,7 +1624,7 @@ void CLevel_MapTool::Open_CameraDialog()
     _float fOriginCamSpeed = pTransform->Get_OriginSpeedPerSec();
 
     static _float fRatio = {1.f};
-    ImGui::SliderFloat("Speed Ratio", &fRatio, 1.f, 15.f);
+    ImGui::SliderFloat("Speed Ratio", &fRatio, 1.f, 40.f);
 
 
     
@@ -1721,6 +1782,392 @@ void CLevel_MapTool::Open_UIDialog()
 }
 
 
+void CLevel_MapTool::Save_OtherModel()
+{
+    FILE* fout = fopen("../Bin/Ohter_Model_Data.bin", "wb");
+    if (!fout)    // 파일 열기에 실패했다면
+    {
+        MSG_BOX(TEXT("파일 쓰기를 실패했어요.."));
+        return;
+    }
+
+    CModel* pModel = nullptr; 
+
+    _uint iModelSize = 6;   // 피 , 유리조각 ,총알 
+    fwrite(&iModelSize, sizeof(iModelSize), 1, fout);
+
+    for (_uint i = 1; i < iModelSize + 1; i++)
+    {
+        switch (i)
+        {
+        case 1:
+            pModel = static_cast<CModel*>(m_pGameInstance->Find_Model(LEVEL_MAPTOOL, L"Prototype_Component_Blood1"));
+            break;
+        case 2:
+            pModel = static_cast<CModel*>(m_pGameInstance->Find_Model(LEVEL_MAPTOOL, L"Prototype_Component_Piece"));
+            break;
+        case 3:
+            pModel = static_cast<CModel*>(m_pGameInstance->Find_Model(LEVEL_MAPTOOL, L"Prototype_Component_Bullet"));
+            break;
+        case 4:
+            pModel = static_cast<CModel*>(m_pGameInstance->Find_Model(LEVEL_MAPTOOL, L"Prototype_Component_Sky"));
+            break;
+        case 5:
+            pModel = static_cast<CModel*>(m_pGameInstance->Find_Model(LEVEL_MAPTOOL, L"Prototype_Component_Electric"));
+            break;
+        case 6:
+            pModel = static_cast<CModel*>(m_pGameInstance->Find_Model(LEVEL_MAPTOOL, L"Prototype_Component_BigElectric"));
+            break;
+        default:
+            break;
+        }
+
+
+        std::string modelPrototypeName = wstringToString(pModel->Get_PrototypeName());
+        std::string modelFilePath = wstringToString(pModel->Get_m_strModelFilePath());
+
+        _uint modelPrototypeNameSize = modelPrototypeName.size();
+        _uint modelFilePathSize = modelFilePath.size();
+
+        _uint meshCount = pModel->Get_MeshesCount();
+        _uint materialsCount = pModel->Get_MaterialsCount();
+
+        _float4x4 PreTransformMatrix = pModel->Get_PreTransformMatrix();
+        fwrite(&PreTransformMatrix, sizeof(PreTransformMatrix), 1, fout);
+
+        fwrite(&modelPrototypeNameSize, sizeof(modelPrototypeNameSize), 1, fout);
+        fwrite(modelPrototypeName.c_str(), modelPrototypeNameSize, 1, fout);
+
+
+        fwrite(&modelFilePathSize, sizeof(modelFilePathSize), 1, fout); // fbx 파일 경로 크기
+        fwrite(modelFilePath.c_str(), modelFilePathSize, 1, fout);
+
+        fwrite(&meshCount, sizeof(meshCount), 1, fout);
+        fwrite(&materialsCount, sizeof(materialsCount), 1, fout);
+
+        for (size_t i = 0; i < materialsCount; i++)
+        {
+            _wstring* pwstrMaterialTexturePath = pModel->Get_MaterialTexturePath(i);
+
+            for (size_t j = 0; j < AI_TEXTURE_TYPE_MAX; j++)
+            {
+                std::string materialTexturePath = wstringToString(pwstrMaterialTexturePath[j]);
+                _uint pathSize = materialTexturePath.size();
+                if (pathSize == 0)
+                {
+                    std::string noPath = "NO_PATH";
+                    _uint noPathSize = noPath.size();
+
+                    fwrite(&noPathSize, sizeof(noPathSize), 1, fout);
+                    fwrite(noPath.c_str(), noPathSize, 1, fout);
+                }
+                else
+                {
+                    fwrite(&pathSize, sizeof(pathSize), 1, fout);
+                    fwrite(materialTexturePath.c_str(), pathSize, 1, fout);
+                }
+            }
+        }
+
+        vector<CMesh*>& vecMesh = pModel->Get_Meshes();
+        for (size_t i = 0; i < vecMesh.size(); i++)
+        {
+            _uint materialIndex = vecMesh[i]->Get_MaterialIndex();
+            _uint numVertices = vecMesh[i]->m_iNumVertices;
+            _uint vertexStride = vecMesh[i]->m_iVertexStride;
+
+            fwrite(&materialIndex, sizeof(materialIndex), 1, fout);
+            fwrite(&numVertices, sizeof(numVertices), 1, fout);
+            fwrite(&vertexStride, sizeof(vertexStride), 1, fout);
+
+            VTXMESH* pVertices = vecMesh[i]->Get_Vertices();
+            for (size_t j = 0; j < numVertices; j++)
+            {
+                fwrite(&pVertices[j].vPosition, sizeof(pVertices[j].vPosition), 1, fout);
+                fwrite(&pVertices[j].vNormal, sizeof(pVertices[j].vNormal), 1, fout);
+                fwrite(&pVertices[j].vTexcoord, sizeof(pVertices[j].vTexcoord), 1, fout);
+                fwrite(&pVertices[j].vTangent, sizeof(pVertices[j].vTangent), 1, fout);
+            }
+
+            _uint numIndices = vecMesh[i]->m_iNumIndices;
+            _uint indexStride = vecMesh[i]->m_iIndexStride;
+            fwrite(&numIndices, sizeof(numIndices), 1, fout);
+            fwrite(&indexStride, sizeof(indexStride), 1, fout);
+
+            _uint* pIndices = vecMesh[i]->Get_Indices();
+            fwrite(pIndices, sizeof(_uint), numIndices, fout);
+
+            fwrite(&vecMesh[i]->m_eIndexFormat, sizeof(vecMesh[i]->m_eIndexFormat), 1, fout);
+            fwrite(&vecMesh[i]->m_eTopology, sizeof(vecMesh[i]->m_eTopology), 1, fout);
+
+            fwrite(&vecMesh[i]->Get_MinPos(), sizeof(vecMesh[i]->Get_MinPos()), 1, fout);
+            fwrite(&vecMesh[i]->Get_MaxPos(), sizeof(vecMesh[i]->Get_MaxPos()), 1, fout);
+        }
+    }
+    
+
+    
+
+
+
+
+
+    fclose(fout);
+    MSG_BOX(TEXT("Other 모델저장 성공!"));
+
+}
+
+
+void CLevel_MapTool::Save_FinalMap()
+{
+    FILE* fout = fopen("../Bin/FinalMap_Data.bin", "wb");
+    if (!fout)    // 파일 열기에 실패했다면
+    {
+        MSG_BOX(TEXT("파일 쓰기를 실패했어요.."));
+        return;
+    }
+
+    CModel* pModel = nullptr;
+
+    _uint iModelSize = 1;
+    fwrite(&iModelSize, sizeof(iModelSize), 1, fout);
+
+    for (_uint i = 1; i < iModelSize + 1; i++)
+    {
+        switch (i)
+        {
+        case 1:
+            pModel = static_cast<CModel*>(m_pGameInstance->Find_Model(LEVEL_MAPTOOL, L"Prototype_Component_MapModel"));
+            break;
+        default:
+            break;
+        }
+
+
+        std::string modelPrototypeName = wstringToString(pModel->Get_PrototypeName());
+        std::string modelFilePath = wstringToString(pModel->Get_m_strModelFilePath());
+
+        _uint modelPrototypeNameSize = modelPrototypeName.size();
+        _uint modelFilePathSize = modelFilePath.size();
+
+        _uint meshCount = pModel->Get_MeshesCount();
+        _uint materialsCount = pModel->Get_MaterialsCount();
+
+        _float4x4 PreTransformMatrix = pModel->Get_PreTransformMatrix();
+        fwrite(&PreTransformMatrix, sizeof(PreTransformMatrix), 1, fout);
+
+        fwrite(&modelPrototypeNameSize, sizeof(modelPrototypeNameSize), 1, fout);
+        fwrite(modelPrototypeName.c_str(), modelPrototypeNameSize, 1, fout);
+
+
+        fwrite(&modelFilePathSize, sizeof(modelFilePathSize), 1, fout); // fbx 파일 경로 크기
+        fwrite(modelFilePath.c_str(), modelFilePathSize, 1, fout);
+
+        fwrite(&meshCount, sizeof(meshCount), 1, fout);
+        fwrite(&materialsCount, sizeof(materialsCount), 1, fout);
+
+        for (size_t i = 0; i < materialsCount; i++)
+        {
+            _wstring* pwstrMaterialTexturePath = pModel->Get_MaterialTexturePath(i);
+
+            for (size_t j = 0; j < AI_TEXTURE_TYPE_MAX; j++)
+            {
+                std::string materialTexturePath = wstringToString(pwstrMaterialTexturePath[j]);
+                _uint pathSize = materialTexturePath.size();
+                if (pathSize == 0)
+                {
+                    std::string noPath = "NO_PATH";
+                    _uint noPathSize = noPath.size();
+
+                    fwrite(&noPathSize, sizeof(noPathSize), 1, fout);
+                    fwrite(noPath.c_str(), noPathSize, 1, fout);
+                }
+                else
+                {
+                    fwrite(&pathSize, sizeof(pathSize), 1, fout);
+                    fwrite(materialTexturePath.c_str(), pathSize, 1, fout);
+                }
+            }
+        }
+
+        vector<CMesh*>& vecMesh = pModel->Get_Meshes();
+        for (size_t i = 0; i < vecMesh.size(); i++)
+        {
+            _uint materialIndex = vecMesh[i]->Get_MaterialIndex();
+            _uint numVertices = vecMesh[i]->m_iNumVertices;
+            _uint vertexStride = vecMesh[i]->m_iVertexStride;
+
+            fwrite(&materialIndex, sizeof(materialIndex), 1, fout);
+            fwrite(&numVertices, sizeof(numVertices), 1, fout);
+            fwrite(&vertexStride, sizeof(vertexStride), 1, fout);
+
+            VTXMESH* pVertices = vecMesh[i]->Get_Vertices();
+            for (size_t j = 0; j < numVertices; j++)
+            {
+                fwrite(&pVertices[j].vPosition, sizeof(pVertices[j].vPosition), 1, fout);
+                fwrite(&pVertices[j].vNormal, sizeof(pVertices[j].vNormal), 1, fout);
+                fwrite(&pVertices[j].vTexcoord, sizeof(pVertices[j].vTexcoord), 1, fout);
+                fwrite(&pVertices[j].vTangent, sizeof(pVertices[j].vTangent), 1, fout);
+            }
+
+            _uint numIndices = vecMesh[i]->m_iNumIndices;
+            _uint indexStride = vecMesh[i]->m_iIndexStride;
+            fwrite(&numIndices, sizeof(numIndices), 1, fout);
+            fwrite(&indexStride, sizeof(indexStride), 1, fout);
+
+            _uint* pIndices = vecMesh[i]->Get_Indices();
+            fwrite(pIndices, sizeof(_uint), numIndices, fout);
+
+            fwrite(&vecMesh[i]->m_eIndexFormat, sizeof(vecMesh[i]->m_eIndexFormat), 1, fout);
+            fwrite(&vecMesh[i]->m_eTopology, sizeof(vecMesh[i]->m_eTopology), 1, fout);
+
+            fwrite(&vecMesh[i]->Get_MinPos(), sizeof(vecMesh[i]->Get_MinPos()), 1, fout);
+            fwrite(&vecMesh[i]->Get_MaxPos(), sizeof(vecMesh[i]->Get_MaxPos()), 1, fout);
+        }
+    }
+
+
+
+
+
+
+
+
+    fclose(fout);
+    MSG_BOX(TEXT("FinalMap 모델저장 성공!"));
+
+}
+
+void CLevel_MapTool::Load_Final_Map_MapTool()
+{
+    FILE* fin = fopen("../Bin/FinalMap.bin", "rb");
+    if (!fin)    // 파일 열기에 실패했다면
+    {
+        MSG_BOX(TEXT("파일 읽기를 실패했어요.."));
+        return;
+    }
+
+    CModel* pModel = nullptr;
+
+    _uint iModelSize = 0;
+    fread(&iModelSize, sizeof(iModelSize), 1, fin);
+
+    for (_uint i = 1; i < iModelSize + 1; i++)
+    {
+        // PreTransformMatrix 읽기
+        _float4x4 PreTransformMatrix;
+        fread(&PreTransformMatrix, sizeof(PreTransformMatrix), 1, fin);
+
+        // Prototype Name 크기 읽기
+        _uint modelPrototypeNameSize = 0;
+        fread(&modelPrototypeNameSize, sizeof(modelPrototypeNameSize), 1, fin);
+
+        // Prototype Name 읽기
+        std::string modelPrototypeName(modelPrototypeNameSize, '\0');
+        fread(&modelPrototypeName[0], modelPrototypeNameSize, 1, fin);
+
+        // Model File Path 크기 읽기
+        _uint modelFilePathSize = 0;
+        fread(&modelFilePathSize, sizeof(modelFilePathSize), 1, fin);
+
+        // Model File Path 읽기
+        std::string modelFilePath(modelFilePathSize, '\0');
+        fread(&modelFilePath[0], modelFilePathSize, 1, fin);
+
+        // Mesh 및 Material 정보 읽기
+        _uint meshCount = 0;
+        _uint materialsCount = 0;
+        fread(&meshCount, sizeof(meshCount), 1, fin);
+        fread(&materialsCount, sizeof(materialsCount), 1, fin);
+
+        string					strMaterialTexturePath = "";
+        _wstring				wstrMaterialTexturePath[200][AI_TEXTURE_TYPE_MAX] = { L"" };			// << 이거 최종맵데이터는 메테리얼갯수많아
+
+        // Material Texture Path 읽기
+        for (size_t i = 0; i < materialsCount; i++)
+        {
+            for (size_t j = 0; j < AI_TEXTURE_TYPE_MAX; j++)
+            {
+                ReadString(fin, strMaterialTexturePath);
+                wstrMaterialTexturePath[i][j] = stringToWstring(strMaterialTexturePath); // 머테리얼 경로
+            }
+        }
+
+
+        _wstring ModelPrototypeName = stringToWstring(modelPrototypeName);
+
+        CMesh::MESH_DESC* pDesc = new CMesh::MESH_DESC[meshCount];
+        pDesc->isInstanceObject = true;
+        pDesc->InstanceBufferPrototypeTag = ModelPrototypeName + L"Instance";
+
+
+        for (size_t i = 0; i < meshCount; i++)
+        {
+            fread(&pDesc[i].iMaterialIndex, sizeof(pDesc[i].iMaterialIndex), 1, fin);
+            fread(&pDesc[i].iNumVertices, sizeof(pDesc[i].iNumVertices), 1, fin);
+            fread(&pDesc[i].iVertexStride, sizeof(pDesc[i].iVertexStride), 1, fin);
+
+            pDesc[i].pVertices = new VTXMESH[pDesc[i].iNumVertices];
+            fread(pDesc[i].pVertices, sizeof(VTXMESH) * pDesc[i].iNumVertices, 1, fin);
+
+            fread(&pDesc[i].iNumIndices, sizeof(pDesc[i].iNumIndices), 1, fin);
+            fread(&pDesc[i].iIndexStride, sizeof(pDesc[i].iIndexStride), 1, fin);
+
+            pDesc[i].pIndices = new _uint[pDesc[i].iNumIndices];
+            fread(pDesc[i].pIndices, sizeof(_uint) * pDesc[i].iNumIndices, 1, fin);
+
+            fread(&pDesc[i].eIndexFormat, sizeof(pDesc[i].eIndexFormat), 1, fin);
+            fread(&pDesc[i].eTopology, sizeof(pDesc[i].eTopology), 1, fin);
+
+            fread(&pDesc[i].vMinPos, sizeof(pDesc[i].vMinPos), 1, fin);
+            fread(&pDesc[i].vMaxPos, sizeof(pDesc[i].vMaxPos), 1, fin);
+        }
+
+        if (true == m_pGameInstance->IsFind_Model(LEVEL_GAMEPLAY, ModelPrototypeName)) // 내가 불러오고자 하는 모델이 이미 불러왔어?
+        {
+            // 모델을 찾았을 때의 처리
+        }
+        else
+        {
+            if (FAILED(m_pGameInstance->Add_Prototype(LEVEL_GAMEPLAY, ModelPrototypeName, // 모델 프로토타입 이름
+                CModel::Create(m_pDevice, m_pContext, CModel::MODEL_TYPE::TYPE_NONANIM, // 모델타입
+                    modelFilePath.c_str(), // 모델 fbx 경로
+                    *wstrMaterialTexturePath, // 머테리얼 텍스쳐 경로
+                    meshCount, // 메쉬 갯수
+                    materialsCount, // 머테리얼 갯수
+                    XMLoadFloat4x4(&PreTransformMatrix), // 더미
+                    pDesc)))) // 메쉬를 이루기 위한 정보
+            {
+                _wstring msg = to_wstring(i) + L"번째" + L"모델이 로드가 안댐";
+                MSG_BOX(msg.c_str());
+                return ;
+            }
+        }
+
+
+        for (size_t i = 0; i < meshCount; i++)
+        {
+            Safe_Delete_Array(pDesc[i].pVertices);
+            Safe_Delete_Array(pDesc[i].pIndices);
+        }
+        Safe_Delete_Array(pDesc);
+    }
+
+    fclose(fin);
+
+    MSG_BOX(TEXT("최종 맵 모델을 Load했습니다.\n OpenObject의 사본 생성을 누르면 생깁니다."));
+}
+
+void CLevel_MapTool::Open_OtherModel()
+{
+    if (ImGui::Button(u8"Other Mesh"))
+    {
+
+    }
+}
+
+
+
 
 HRESULT CLevel_MapTool::Create_PreViewObject(_int iSelectObjectNum)
 {
@@ -1788,6 +2235,10 @@ HRESULT CLevel_MapTool::Create_PreViewObject(_int iSelectObjectNum)
         break;
     case Client::CLevel_MapTool::SNIPER:
         strPrototypeName = TEXT("Prototype_GameObject_Sniper");
+        break;
+
+    case Client::CLevel_MapTool::HEL:
+        strPrototypeName = TEXT("Prototype_GameObject_Hel");
         break;
     default:
         break;
@@ -1890,7 +2341,9 @@ HRESULT CLevel_MapTool::Create_Object()
     case Client::CLevel_MapTool::SNIPER:
         strLayerName = L"Layer_Anim_Object";
         break;
-
+    case Client::CLevel_MapTool::HEL:
+        strLayerName = L"Layer_Anim_Object";
+        break;
     default:
         break;
     }
@@ -1921,7 +2374,6 @@ _bool CLevel_MapTool::IsPicking_ByObjects(CGameObject** pOut)
     _float3     vPickPos = {};
 
 
-
     list<CGameObject*>& AnimObjects = m_pGameInstance->Get_GameObjects(LEVEL_MAPTOOL, L"Layer_Anim_Object");
     for (auto pAnimObj : AnimObjects)
     {
@@ -1930,6 +2382,8 @@ _bool CLevel_MapTool::IsPicking_ByObjects(CGameObject** pOut)
 
         for (size_t i = 0; i < vecMeshs.size(); i++)
         {
+            _float3 vPickPos;                       // 월드상의 위치가 반환되고,
+            
             if (vecMeshs[i]->isPicking(pAnimObj->Get_Transform()->Get_WorldMatrix(), &vPickPos))
             {
                 // 해당 모델의 메쉬중 하나라도 피킹을 했다면
@@ -2112,6 +2566,11 @@ void CLevel_MapTool::Save_Map()
 
 
     Save_Player();
+
+
+    Save_OtherModel();
+    Save_FinalMap();
+
 }
 
 void CLevel_MapTool::Save_Terrain()
@@ -2151,7 +2610,6 @@ void CLevel_MapTool::Save_Terrain()
     MSG_BOX(TEXT("Terrain 저장 성공!"));
     // ===========================================================================================
 }
-
 
 void CLevel_MapTool::Save_NonAnimObject()
 {  
@@ -2539,7 +2997,6 @@ void CLevel_MapTool::Save_NonAnimObject()
 
 }
 
-
 void CLevel_MapTool::Save_AnimObject()
 {
     FILE* fp = NULL;
@@ -2782,7 +3239,8 @@ void CLevel_MapTool::Save_AnimObject()
         if (MODEL_CHECK_LIST::ELITE == objectType ||
             MODEL_CHECK_LIST::JETPACK == objectType ||
             MODEL_CHECK_LIST::PISTOL == objectType ||
-            MODEL_CHECK_LIST::SNIPER == objectType)
+            MODEL_CHECK_LIST::SNIPER == objectType ||
+            MODEL_CHECK_LIST::HEL == objectType)
         {
             // 컨테이너 오브젝트라면
 
@@ -2905,10 +3363,6 @@ void CLevel_MapTool::Save_AnimObject()
     MessageBox(NULL, TEXT("Anim모델저장 성공!"), TEXT("Success"), MB_OK);
 
 }
-
-
-
-
 
 void CLevel_MapTool::Save_NonAnimObject_MapTool()
 {
@@ -3080,7 +3534,6 @@ void CLevel_MapTool::Save_NonAnimObject_MapTool()
 
 }
 
-
 void CLevel_MapTool::Save_AnimObject_MapTool()
 {
     ofstream fout;
@@ -3145,7 +3598,6 @@ void CLevel_MapTool::Save_AnimObject_MapTool()
     fout.close();
     MSG_BOX(TEXT("맵툴전용 Anim모델저장 성공!"));
 }
-
 
 void CLevel_MapTool::Save_Player()
 {
@@ -3471,8 +3923,6 @@ void CLevel_MapTool::Save_Player()
     }
 }
 
-
-
 void CLevel_MapTool::Save_Navigation()
 {
     ofstream fout;
@@ -3537,15 +3987,16 @@ void CLevel_MapTool::Save_Navigation()
     MSG_BOX(TEXT("Navigation 저장 성공!"));
 }
 
-
-
 void CLevel_MapTool::Load_Map()
 {
-    Load_Terrain();
+    //Load_Terrain();
 
-    Load_NonAnimObject_MapTool();
+    //Load_Final_Map_MapTool();           // 3dMax에서 조합한 최종 하나의 맵오브젝트 객체 드로우콜 1번을 위한
 
-    Load_AnimObject_MapTool();
+    Load_NonAnimObject_MapTool();       // 부가적인 와이어를 타기위한 오브젝트, 클라이밍을 하기위한 오브젝트 배치
+
+    Load_AnimObject_MapTool();          // 그외 몬스터들
+
 }
 
 
@@ -3612,6 +4063,7 @@ void CLevel_MapTool::Load_Terrain()
 
 void CLevel_MapTool::Load_NonAnimObject_MapTool()
 {
+
     ifstream fin;
 
     fin.open("../Bin/NonAnim_Model_Data_MapTool.bin", ios::binary);
@@ -4028,6 +4480,15 @@ void CLevel_MapTool::ReadString(ifstream& fin, string& str)
     fin.read(&str[0], length);
 }
 
+
+void CLevel_MapTool::ReadString(FILE* file, string& str)
+{
+    _uint length = 0;
+    fread(&length, sizeof(length), 1, file);
+
+    str.resize(length);
+    fread(&str[0], length, 1, file);
+}
 
 
 

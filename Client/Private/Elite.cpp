@@ -55,7 +55,7 @@ void CElite::Update(_float fTimeDelta)
 {
     __super::Update(fTimeDelta);
 
-    m_pModel->SetUp_Animation(2, true);
+    m_pModel->SetUp_Animation(1, true);
 
     m_pModel->Play_Animation(fTimeDelta);
 
@@ -91,9 +91,9 @@ HRESULT CElite::Render()
         return E_FAIL;
 
 
-    _float fAlpha = 0.7f;
-    if (FAILED(m_pShaderCom->Bind_RawValue("g_fAlpha", &fAlpha, sizeof(_float))))
-        return E_FAIL;
+    //_float fAlpha = 0.7f;
+    //if (FAILED(m_pShaderCom->Bind_RawValue("g_fAlpha", &fAlpha, sizeof(_float))))
+    //    return E_FAIL;
 
 
 

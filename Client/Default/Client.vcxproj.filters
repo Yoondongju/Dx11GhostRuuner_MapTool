@@ -133,6 +133,15 @@
     <Filter Include="02.GameObjects\Monster\Elite\Weapon">
       <UniqueIdentifier>{06aeb0ff-921a-478c-82b4-53e686542695}</UniqueIdentifier>
     </Filter>
+    <Filter Include="02.GameObjects\OtherModel">
+      <UniqueIdentifier>{c2203e47-fb0a-444a-bd8b-ce729e072451}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Hel">
+      <UniqueIdentifier>{cd7278f4-9951-41c5-8c1f-d09c8fd99e98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="02.GameObjects\Monster\Hel\Weapon">
+      <UniqueIdentifier>{44658c60-ba42-41fa-86eb-62604b81310e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client.h">
@@ -260,6 +269,12 @@
     </ClInclude>
     <ClInclude Include="..\Public\Weapon_Elite.h">
       <Filter>02.GameObjects\Monster\Elite\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Hel.h">
+      <Filter>02.GameObjects\Monster\Hel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Weapon_Hel.h">
+      <Filter>02.GameObjects\Monster\Hel\Weapon</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -419,6 +434,12 @@
     </ClCompile>
     <ClCompile Include="..\Private\Weapon_Elite.cpp">
       <Filter>02.GameObjects\Monster\Elite\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Hel.cpp">
+      <Filter>02.GameObjects\Monster\Hel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Weapon_Hel.cpp">
+      <Filter>02.GameObjects\Monster\Hel\Weapon</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

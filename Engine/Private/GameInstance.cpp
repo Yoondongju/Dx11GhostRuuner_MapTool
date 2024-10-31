@@ -11,6 +11,8 @@
 #include "../Public/UI_Manager.h"
 #include "../Public/PickingManager.h"
 #include "../Public/PhysXManager.h"
+#include "../Public/Light_Manager.h"
+#include "../Public/Target_Manager.h"
 
 #include "../Public/Layer.h"
 
@@ -40,7 +42,10 @@ HRESULT CGameInstance::Initialize_Engine(_uint iNumLevels, const ENGINE_DESC& En
 
 	m_hWnd = EngineDesc.hWnd;
 
-	
+
+	m_pTarget_Manager = CTarget_Manager::Create(*ppDevice, *ppContext);
+	if (nullptr == m_pTarget_Manager)
+		return E_FAIL;
 
 	m_pRenderer = CRenderer::Create(*ppDevice, *ppContext);
 	if (nullptr == m_pRenderer)
@@ -84,6 +89,10 @@ HRESULT CGameInstance::Initialize_Engine(_uint iNumLevels, const ENGINE_DESC& En
 	m_pPipeLine = CPipeLine::Create();
 	if (nullptr == m_pPipeLine)
 		return S_OK;
+
+	m_pLight_Manager = CLight_Manager::Create();
+	if (nullptr == m_pLight_Manager)
+		return E_FAIL;
 
 	m_pPhysX_Manager = CPhysXManager::Create();
 	if (nullptr == m_pPhysX_Manager)
@@ -257,6 +266,16 @@ CComponent* CGameInstance::Get_Prototype(_uint iNumLevelIndex, const _wstring& s
 	return m_pComponent_Manager->Get_Prototype(iNumLevelIndex,strPrototypeTag);
 }
 
+CComponent* CGameInstance::Find_Model(_uint iLevelIndex , const _wstring& strModelTag)
+{
+	return m_pComponent_Manager->Find_Prototype(iLevelIndex, strModelTag);
+}
+
+_bool CGameInstance::IsFind_Model(_uint iLevelIndex, const _wstring& strModelPrototypeName)
+{
+	return m_pComponent_Manager->IsFind_Model(iLevelIndex, strModelPrototypeName);
+}
+
 HRESULT CGameInstance::Add_Timer(const _wstring& strTimerTag)
 {
 	return m_pTimer_Manager->Add_Timer(strTimerTag);
@@ -351,6 +370,16 @@ _bool CGameInstance::isPicked_InWorldSpace(const BoundingBox& MeshBoundingBox, _
 	return m_pPicking_Manager->isPicked_InWorldSpace(MeshBoundingBox, pOut);
 }
 
+_bool CGameInstance::Picking(_float3* pPickPos)
+{
+	return m_pPicking_Manager->Picking(pPickPos);
+}
+
+_vector CGameInstance::Compute_Height(_fvector vWorldPos, _fmatrix ViewMatrix, _fmatrix ProjMatrix)
+{
+	return m_pPicking_Manager->Compute_Height(vWorldPos, ViewMatrix, ProjMatrix);
+}
+
 _bool CGameInstance::isPicked_InLocalSpace(const BoundingBox& MeshBoundingBox, _float3* pOut)
 {
 	return m_pPicking_Manager->isPicked_InLocalSpace(MeshBoundingBox, pOut);
@@ -397,8 +426,63 @@ _vector CGameInstance::Get_CamPosition_Vector() const
 	return m_pPipeLine->Get_CamPosition_Vector();
 }
 
+HRESULT CGameInstance::Add_Light(const LIGHT_DESC& LightDesc)
+{
+	return m_pLight_Manager->Add_Light(LightDesc);
+}
+const LIGHT_DESC* CGameInstance::Get_LightDesc(_uint iIndex) const
+{
+	return m_pLight_Manager->Get_LightDesc(iIndex);
+}
+
+HRESULT CGameInstance::Render_Lights(CShader* pShader, CVIBuffer_Rect* pVIBuffer)
+{
+
+	return m_pLight_Manager->Render(pShader, pVIBuffer);
+}
 
 
+HRESULT CGameInstance::Add_RenderTarget(const _wstring& strTargetTag, _uint iWidth, _uint iHeight, DXGI_FORMAT ePixelFormat, const _float4& vClearColor)
+{
+	return m_pTarget_Manager->Add_RenderTarget(strTargetTag, iWidth, iHeight, ePixelFormat, vClearColor);
+}
+
+HRESULT CGameInstance::Add_MRT(const _wstring& strMRTTag, const _wstring& strTargetTag)
+{
+	return m_pTarget_Manager->Add_MRT(strMRTTag, strTargetTag);
+}
+
+HRESULT CGameInstance::Begin_MRT(const _wstring& strMRTTag)
+{
+	return m_pTarget_Manager->Begin_MRT(strMRTTag);
+}
+
+HRESULT CGameInstance::End_MRT()
+{
+	return m_pTarget_Manager->End_MRT();
+}
+
+HRESULT CGameInstance::Bind_RT_ShaderResource(CShader* pShader, const _wstring& strTargetTag, const _char* pConstantName)
+{
+	return m_pTarget_Manager->Bind_ShaderResource(pShader, strTargetTag, pConstantName);
+}
+
+HRESULT CGameInstance::Copy_RenderTarget(const _wstring& strTargetTag, ID3D11Texture2D* pTexture)
+{
+	return m_pTarget_Manager->Copy_RenderTarget(strTargetTag, pTexture);
+}
+
+#ifdef _DEBUG
+HRESULT CGameInstance::Ready_RT_Debug(const _wstring& strTargetTag, _float fX, _float fY, _float fSizeX, _float fSizeY)
+{
+	return m_pTarget_Manager->Ready_Debug(strTargetTag, fX, fY, fSizeX, fSizeY);
+}
+HRESULT CGameInstance::Render_MRT_Debug(const _wstring& strMRTTag, CShader* pShader, CVIBuffer_Rect* pVIBuffer)
+{
+	return m_pTarget_Manager->Render(strMRTTag, pShader, pVIBuffer);
+}
+
+#endif
 
 
 void CGameInstance::Delete(_uint iLevelIndex, CRenderer::RENDERGROUP eRenderGroup, class CGameObject* pObj)
@@ -453,6 +537,9 @@ PxMaterial* CGameInstance::Get_Material()
 
 void CGameInstance::Release_Engine()
 {
+	Safe_Release(m_pTarget_Manager);
+	Safe_Release(m_pLight_Manager);
+
 	Safe_Release(m_pPhysX_Manager);
 
 	Safe_Release(m_pPipeLine);

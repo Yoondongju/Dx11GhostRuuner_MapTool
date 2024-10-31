@@ -90,9 +90,9 @@ HRESULT CPistol::Render()
         return E_FAIL;
 
 
-    _float fAlpha = 0.7f;
-    if (FAILED(m_pShaderCom->Bind_RawValue("g_fAlpha", &fAlpha, sizeof(_float))))
-        return E_FAIL;
+    //_float fAlpha = 0.7f;
+    //if (FAILED(m_pShaderCom->Bind_RawValue("g_fAlpha", &fAlpha, sizeof(_float))))
+    //    return E_FAIL;
 
 
 

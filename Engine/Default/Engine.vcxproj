@@ -44,6 +44,8 @@
     <ClInclude Include="..\Public\Layer.h" />
     <ClInclude Include="..\Public\Level.h" />
     <ClInclude Include="..\Public\Level_Manager.h" />
+    <ClInclude Include="..\Public\Light.h" />
+    <ClInclude Include="..\Public\Light_Manager.h" />
     <ClInclude Include="..\Public\Mesh.h" />
     <ClInclude Include="..\Public\Model.h" />
     <ClInclude Include="..\Public\Navigation.h" />
@@ -53,8 +55,10 @@
     <ClInclude Include="..\Public\PickingManager.h" />
     <ClInclude Include="..\Public\PipeLine.h" />
     <ClInclude Include="..\Public\Renderer.h" />
+    <ClInclude Include="..\Public\RenderTarget.h" />
     <ClInclude Include="..\Public\Shader.h" />
     <ClInclude Include="..\Public\State.h" />
+    <ClInclude Include="..\Public\Target_Manager.h" />
     <ClInclude Include="..\Public\Texture.h" />
     <ClInclude Include="..\Public\Timer.h" />
     <ClInclude Include="..\Public\Timer_Manager.h" />
@@ -145,6 +149,8 @@
     <ClCompile Include="..\Private\Layer.cpp" />
     <ClCompile Include="..\Private\Level.cpp" />
     <ClCompile Include="..\Private\Level_Manager.cpp" />
+    <ClCompile Include="..\Private\Light.cpp" />
+    <ClCompile Include="..\Private\Light_Manager.cpp" />
     <ClCompile Include="..\Private\Mesh.cpp" />
     <ClCompile Include="..\Private\Model.cpp" />
     <ClCompile Include="..\Private\Navigation.cpp" />
@@ -154,8 +160,10 @@
     <ClCompile Include="..\Private\PickingManager.cpp" />
     <ClCompile Include="..\Private\PipeLine.cpp" />
     <ClCompile Include="..\Private\Renderer.cpp" />
+    <ClCompile Include="..\Private\RenderTarget.cpp" />
     <ClCompile Include="..\Private\Shader.cpp" />
     <ClCompile Include="..\Private\State.cpp" />
+    <ClCompile Include="..\Private\Target_Manager.cpp" />
     <ClCompile Include="..\Private\Texture.cpp" />
     <ClCompile Include="..\Private\Timer.cpp" />
     <ClCompile Include="..\Private\Timer_Manager.cpp" />
@@ -174,6 +182,10 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Bin\ShaderFiles\Shader_Cell.hlsl" />
+    <FxCompile Include="..\Bin\ShaderFiles\Shader_Deferred.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Bin\ShaderFiles\Shader_Engine_Defines.hlsli" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

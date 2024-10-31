@@ -36,11 +36,14 @@ HRESULT CGameObject::Initialize(void* pArg)
 {
 	GAMEOBJECT_DESC* pDesc = static_cast<GAMEOBJECT_DESC*>(pArg);
 
-	m_iModelNum = pDesc->iModelNum;             // 몇번째 모델을 사용할거니 ? 같은 클래스의 오브젝트더라도 모델이 다를수 있지?
-	m_iModelListType = pDesc->iModelListType;
+	if (nullptr != pDesc)
+	{
+		m_iModelNum = pDesc->iModelNum;             // 몇번째 모델을 사용할거니 ? 같은 클래스의 오브젝트더라도 모델이 다를수 있지?
+		m_iModelListType = pDesc->iModelListType;
 
-	m_iObjectType = pDesc->iObjectType;		// 데코,스태틱,다이나믹?
-
+		m_iObjectType = pDesc->iObjectType;		// 데코,스태틱,다이나믹?
+	}
+	
 
 	m_pTransformCom = CTransform::Create(m_pDevice, m_pContext, pDesc);
 	if (nullptr == m_pTransformCom)

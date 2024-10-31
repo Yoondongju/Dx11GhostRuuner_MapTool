@@ -83,6 +83,53 @@ HRESULT CMesh::Initialize_Prototype(const CModel* pModel , CModel::MODEL_TYPE eT
 	return S_OK;
 }
 
+HRESULT CMesh::Initialize_Prototype(CModel* pModel, CModel::MODEL_TYPE eModelType, _fmatrix PreTransformMatrix, void* pArg)
+{
+	CMesh::MESH_DESC* pDesc = static_cast<CMesh::MESH_DESC*>(pArg);
+
+	strcpy_s(m_szName, pDesc->pName);
+
+	switch (eModelType)
+	{
+	case Engine::CModel::TYPE_NONANIM:
+		Ready_VertexBuffer_NonAnim(pArg, PreTransformMatrix);
+		break;
+	case Engine::CModel::TYPE_ANIM:
+		//Ready_VertexBuffer_Anim(pArg, pModel);
+		break;
+	case Engine::CModel::TYPE_END:
+		break;
+	default:
+		break;
+	}
+
+
+
+#pragma region INDEX_BUFFER
+	/* 인덱스버퍼의 내용을 채워주곡 */
+	ZeroMemory(&m_BufferDesc, sizeof m_BufferDesc);
+	m_BufferDesc.ByteWidth = m_iIndexStride * m_iNumIndices;
+	m_BufferDesc.Usage = D3D11_USAGE_DEFAULT; /* 정적버퍼로 생성한다. */
+	m_BufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	m_BufferDesc.CPUAccessFlags = 0;
+	m_BufferDesc.MiscFlags = 0;
+	m_BufferDesc.StructureByteStride = m_iIndexStride;
+
+
+	ZeroMemory(&m_InitialData, sizeof m_InitialData);
+	m_InitialData.pSysMem = pDesc->pIndices;
+
+	m_pIndices = new _uint[m_iNumIndices];
+	memcpy(m_pIndices, pDesc->pIndices, sizeof(_uint) * m_iNumIndices);
+
+	/* 인덱스버퍼를 생성한다. */
+	if (FAILED(__super::Create_Buffer(&m_pIB)))
+		return E_FAIL;
+
+#pragma endregion
+	return S_OK;
+}
+
 HRESULT CMesh::Initialize(void* pArg)
 {
 	return S_OK;
@@ -285,11 +332,77 @@ HRESULT CMesh::Ready_VertexBuffer_Anim(const CModel* pModel, const aiMesh* pAIMe
 	return S_OK;
 }
 
+HRESULT CMesh::Ready_VertexBuffer_NonAnim(void* pArg, _fmatrix PreTransformMatrix)
+{
+	MESH_DESC* pDesc = static_cast<MESH_DESC*>(pArg);
+
+	m_iMaterialIndex = pDesc->iMaterialIndex;
+	m_iNumVertexBuffers = 1;
+	m_iNumVertices = pDesc->iNumVertices;
+	m_iVertexStride = sizeof(VTXMESH);
+	m_iNumIndices = pDesc->iNumIndices;
+	m_iIndexStride = 4;
+	m_eIndexFormat = DXGI_FORMAT_R32_UINT;
+	m_eTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+#pragma region VERTEX_BUFFER
+	ZeroMemory(&m_BufferDesc, sizeof m_BufferDesc);
+	m_BufferDesc.ByteWidth = m_iVertexStride * m_iNumVertices;
+	m_BufferDesc.Usage = D3D11_USAGE_DEFAULT; /* 정적버퍼로 생성한다. */
+	m_BufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	m_BufferDesc.CPUAccessFlags = 0;
+	m_BufferDesc.MiscFlags = 0;
+	m_BufferDesc.StructureByteStride = m_iVertexStride;
+
+	/* 정점버퍼에 채워줄 값들을 만들기위해서 임시적으로 공간을 할당한다. */
+	m_pVertices = new VTXMESH[m_iNumVertices];
+	ZeroMemory(m_pVertices, sizeof(VTXMESH) * m_iNumVertices);
+
+	for (size_t i = 0; i < m_iNumVertices; i++)
+	{
+		memcpy(&m_pVertices[i].vPosition, &pDesc->pVertices[i].vPosition, sizeof(_float3));
+		//XMStoreFloat3(&pVertices[i].vPosition, XMVector3TransformCoord(XMLoadFloat3(&pVertices[i].vPosition), PreTransformMatrix));
+		// PreTransformMatrix는 맵툴에서 이미 다 세팅 해놨음
+
+		memcpy(&m_pVertices[i].vNormal, &pDesc->pVertices[i].vNormal, sizeof(_float3));
+		memcpy(&m_pVertices[i].vTexcoord, &pDesc->pVertices[i].vTexcoord, sizeof(_float2));
+		memcpy(&m_pVertices[i].vTangent, &pDesc->pVertices[i].vTangent, sizeof(_float3));
+	}
+
+	ZeroMemory(&m_InitialData, sizeof m_InitialData);
+	m_InitialData.pSysMem = m_pVertices;
+
+	/* 정점버퍼를 생성한다. */
+	if (FAILED(__super::Create_Buffer(&m_pVB)))
+		return E_FAIL;
+
+
+	XMStoreFloat3(&m_vMinPos, XMLoadFloat3(&pDesc->vMinPos));
+	XMStoreFloat3(&m_vMaxPos, XMLoadFloat3(&pDesc->vMaxPos));
+
+
+
+	return S_OK;
+}
+
 CMesh* CMesh::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const CModel* pModel , CModel::MODEL_TYPE eType  , const aiMesh* pAIMesh, _fmatrix PreTransformMatrix)
 {
 	CMesh* pInstance = new CMesh(pDevice, pContext);
 
 	if (FAILED(pInstance->Initialize_Prototype(pModel , eType , pAIMesh, PreTransformMatrix)))
+	{
+		MSG_BOX(TEXT("Failed to Created : CMesh"));
+		Safe_Release(pInstance);
+	}
+
+	return pInstance;
+}
+
+CMesh* CMesh::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, CModel* pModel, CModel::MODEL_TYPE eModelType, _fmatrix PreTransformMatrix, void* pArg)
+{
+	CMesh* pInstance = new CMesh(pDevice, pContext);
+
+	if (FAILED(pInstance->Initialize_Prototype(pModel, eModelType, PreTransformMatrix, pArg)))
 	{
 		MSG_BOX(TEXT("Failed to Created : CMesh"));
 		Safe_Release(pInstance);

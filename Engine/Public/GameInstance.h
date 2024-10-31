@@ -72,6 +72,9 @@ public:
 	HRESULT Add_Prototype(_uint iLevelIndex, const _wstring & strPrototypeTag, class CComponent* pPrototype); // 레벨 인덱스가 있는거 컴포넌트
 	class CComponent* Clone_Component(_uint iLevelIndex, const _wstring & strPrototypeTag, void* pArg = nullptr);
 	class CComponent* Get_Prototype(_uint iNumLevelIndex, const _wstring & strPrototypeTag);	
+
+	class CComponent* Find_Model(_uint iLevelIndex , const _wstring & strModelTag);
+	_bool			  IsFind_Model(_uint iLevelIndex, const _wstring & strModelPrototypeName);
 #pragma endregion
 
 
@@ -130,14 +133,40 @@ public:
 	_bool isPicked_InLocalSpace(const BoundingBox& MeshBoundingBox, _float3* pOut);
 	_bool isPicked_InLocalSpace(const _vector& vPointA, const _vector& vPointB, const _vector& vPointC, _vector* pOut);
 
-
-
 	_bool isPicked_InWorldSpace(const BoundingBox& MeshBoundingBox, _float3* pOut);
+
+	_bool Picking(_float3* pPickPos);
+	_vector Compute_Height(_fvector vWorldPos, _fmatrix ViewMatrix, _fmatrix ProjMatrix);
+
 
 #pragma endregion
 
+
+
 	// 이벤트 매니저를 통한 삭제 로직
 	void Delete(_uint iLevelIndex, CRenderer::RENDERGROUP eRenderGroup , class CGameObject* pObj);
+
+#pragma region LIGHT_MANAGER
+	HRESULT Add_Light(const LIGHT_DESC& LightDesc);
+	const LIGHT_DESC* Get_LightDesc(_uint iIndex) const;
+	HRESULT Render_Lights(class CShader* pShader, class CVIBuffer_Rect* pVIBuffer);
+
+#pragma endregion
+
+
+#pragma region TARGET_MANAGER
+	HRESULT Add_RenderTarget(const _wstring& strTargetTag, _uint iWidth, _uint iHeight, DXGI_FORMAT ePixelFormat, const _float4& vClearColor);
+	HRESULT Add_MRT(const _wstring& strMRTTag, const _wstring& strTargetTag);
+	HRESULT Begin_MRT(const _wstring& strMRTTag);
+	HRESULT End_MRT();
+	HRESULT Bind_RT_ShaderResource(class CShader* pShader, const _wstring& strTargetTag, const _char* pConstantName);
+	HRESULT Copy_RenderTarget(const _wstring& strTargetTag, ID3D11Texture2D* pTexture);
+
+#ifdef _DEBUG
+	HRESULT Ready_RT_Debug(const _wstring& strTargetTag, _float fX, _float fY, _float fSizeX, _float fSizeY);
+	HRESULT Render_MRT_Debug(const _wstring& strMRTTag, class CShader* pShader, class CVIBuffer_Rect* pVIBuffer);
+#endif
+
 
 
 #pragma region PHYSX_MANAGER
@@ -157,6 +186,8 @@ private:
 	class CTimer_Manager*		m_pTimer_Manager = { nullptr };
 	class CRenderer*			m_pRenderer = { nullptr };
 	class CPipeLine*			m_pPipeLine = { nullptr };
+	class CLight_Manager*		m_pLight_Manager = { nullptr };
+	class CTarget_Manager*		m_pTarget_Manager = { nullptr };
 
 
 

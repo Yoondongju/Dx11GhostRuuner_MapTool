@@ -1,29 +1,31 @@
 #include "stdafx.h"
-#include "..\Public\Weapon_Player.h"
+#include "..\Public\Weapon_Hel.h"
 
 #include "Player.h"
 
 #include "GameInstance.h"
 
-CWeapon_Player::CWeapon_Player(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+CWeapon_Hel::CWeapon_Hel(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	: CPartObject{ pDevice, pContext }
 {
+
 }
 
-CWeapon_Player::CWeapon_Player(const CWeapon_Player& Prototype)
+CWeapon_Hel::CWeapon_Hel(const CWeapon_Hel& Prototype)
 	: CPartObject{ Prototype }
 {
+
 }
 
-HRESULT CWeapon_Player::Initialize_Prototype()
+HRESULT CWeapon_Hel::Initialize_Prototype()
 {
 	return S_OK;
 }
 
-HRESULT CWeapon_Player::Initialize(void* pArg)
+HRESULT CWeapon_Hel::Initialize(void* pArg)
 {
 	WEAPON_DESC* pDesc = static_cast<WEAPON_DESC*>(pArg);
-	
+
 	m_pSocketMatrix = pDesc->pSocketBoneMatrix;
 
 	/* 직교퉁여을 위한 데이터들을 모두 셋하낟. */
@@ -33,31 +35,31 @@ HRESULT CWeapon_Player::Initialize(void* pArg)
 	if (FAILED(Ready_Components()))
 		return E_FAIL;
 
-	
+
 	//_float4x4 InitWorldMatrix = {
 	//	0.181342006, 0.655698836, 0.207122847, 0.00000000,
 	//	-0.963511229, 0.238839343, 0.0874769986, 0.00000000,
 	//	0.0110353436, -0.301334143, 0.944287121, 0.00000000,
 	//	0.0750860050, -0.0355550535, 0.0480655581, 1.00000000
 	//};
-	//
-	//
+
+
 	//m_pTransformCom->Set_WorldMatrix(InitWorldMatrix);
 
 	return S_OK;
 }
 
-void CWeapon_Player::Priority_Update(_float fTimeDelta)
+void CWeapon_Hel::Priority_Update(_float fTimeDelta)
 {
-	
+
 }
 
-void CWeapon_Player::Update(_float fTimeDelta)
+void CWeapon_Hel::Update(_float fTimeDelta)
 {
-	
+
 }
 
-void CWeapon_Player::Late_Update(_float fTimeDelta)
+void CWeapon_Hel::Late_Update(_float fTimeDelta)
 {
 	_matrix		SocketMatrix = XMLoadFloat4x4(m_pSocketMatrix);
 
@@ -73,7 +75,7 @@ void CWeapon_Player::Late_Update(_float fTimeDelta)
 	m_pGameInstance->Add_RenderObject(CRenderer::RG_NONBLEND, this);
 }
 
-HRESULT CWeapon_Player::Render()
+HRESULT CWeapon_Hel::Render()
 {
 	if (FAILED(__super::Bind_WorldMatrix(m_pShaderCom, "g_WorldMatrix")))
 		return E_FAIL;
@@ -83,25 +85,25 @@ HRESULT CWeapon_Player::Render()
 	if (FAILED(m_pShaderCom->Bind_Matrix("g_ProjMatrix", &m_pGameInstance->Get_Transform_Float4x4(CPipeLine::D3DTS_PROJ))))
 		return E_FAIL;
 
-	_uint		iNumMeshes = m_pModelCom[m_eCurType]->Get_MeshesCount();
+	_uint		iNumMeshes = m_pModelCom->Get_MeshesCount();
 
 	for (size_t i = 0; i < iNumMeshes; i++)
-	{	
+	{
 
-		if (FAILED(m_pModelCom[m_eCurType]->Bind_Material(m_pShaderCom, "g_DiffuseTexture", aiTextureType_DIFFUSE, i)))
+		if (FAILED(m_pModelCom->Bind_Material(m_pShaderCom, "g_DiffuseTexture", aiTextureType_DIFFUSE, i)))
 			return E_FAIL;
 
 		if (FAILED(m_pShaderCom->Begin(0)))
 			return E_FAIL;
 
-		if (FAILED(m_pModelCom[m_eCurType]->Render(i)))
+		if (FAILED(m_pModelCom->Render(i)))
 			return E_FAIL;
 	}
 
 	return S_OK;
 }
 
-HRESULT CWeapon_Player::Ready_Components()
+HRESULT CWeapon_Hel::Ready_Components()
 {
 	/* FOR.Com_Shader */
 	if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Shader_VtxMeshTex"),
@@ -110,25 +112,21 @@ HRESULT CWeapon_Player::Ready_Components()
 
 
 	/* FOR.Com_Model */
-	if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Player_Katana"),
-		TEXT("Com_Model"), reinterpret_cast<CComponent**>(&m_pModelCom[WEAPON_TYPE::KATANA]))))
-		return E_FAIL;
-
-	if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Player_Shuriken"),
-		TEXT("Com_Model"), reinterpret_cast<CComponent**>(&m_pModelCom[WEAPON_TYPE::SHURIKEN]))))
+	if (FAILED(__super::Add_Component(LEVEL_MAPTOOL, TEXT("Prototype_Component_Model_Player_Weapon"),
+		TEXT("Com_Model"), reinterpret_cast<CComponent**>(&m_pModelCom))))
 		return E_FAIL;
 
 
 	return S_OK;
 }
 
-CWeapon_Player* CWeapon_Player::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+CWeapon_Hel* CWeapon_Hel::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	CWeapon_Player* pInstance = new CWeapon_Player(pDevice, pContext);
+	CWeapon_Hel* pInstance = new CWeapon_Hel(pDevice, pContext);
 
 	if (FAILED(pInstance->Initialize_Prototype()))
 	{
-		MSG_BOX(TEXT("Failed to Created : CWeapon_Player"));
+		MSG_BOX(TEXT("Failed to Created : CWeapon_Hel"));
 		Safe_Release(pInstance);
 	}
 
@@ -137,28 +135,24 @@ CWeapon_Player* CWeapon_Player::Create(ID3D11Device* pDevice, ID3D11DeviceContex
 
 
 
-CGameObject* CWeapon_Player::Clone(void* pArg)
+CGameObject* CWeapon_Hel::Clone(void* pArg)
 {
-	CWeapon_Player* pInstance = new CWeapon_Player(*this);
+	CWeapon_Hel* pInstance = new CWeapon_Hel(*this);
 
 	if (FAILED(pInstance->Initialize(pArg)))
 	{
-		MSG_BOX(TEXT("Failed to Cloned : CWeapon_Player"));
+		MSG_BOX(TEXT("Failed to Cloned : CWeapon_Hel"));
 		Safe_Release(pInstance);
 	}
 
 	return pInstance;
 }
 
-void CWeapon_Player::Free()
+void CWeapon_Hel::Free()
 {
 	__super::Free();
 
 	Safe_Release(m_pShaderCom);
 
-	for (_uint i = 0; i < WEAPON_TYPE::WEAPON_TYPE_END; i++)
-	{
-		Safe_Release(m_pModelCom[i]);
-	}
-	
+	Safe_Release(m_pModelCom);
 }

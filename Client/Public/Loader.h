@@ -48,7 +48,7 @@ private:
 	HRESULT Ready_Map_Model();
 	HRESULT Ready_Player_Model();
 	HRESULT Ready_Monster_Model();
-
+	HRESULT Ready_Other_Model();
 
 
 	HRESULT Ready_VIBuffer();

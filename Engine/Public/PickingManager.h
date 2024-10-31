@@ -11,6 +11,9 @@ private:
 
 public:
 	HRESULT	Initialize(HWND hWnd);
+	_bool Picking(_float3* pPickPos);
+	_vector Compute_Height(_fvector vWorldPos, _fmatrix ViewMatrix, _fmatrix ProjMatrix);
+
 
 
 public:
@@ -36,7 +39,9 @@ public:
 private:
 	ID3D11Device*					m_pDevice = { nullptr };
 	ID3D11DeviceContext*			m_pContext = { nullptr };
-	
+	ID3D11Texture2D*				m_pPickDepthTexture = { nullptr };
+	_uint							m_iViewportWidth{}, m_iViewportHeight{};
+
 
 	class CGameInstance*			m_pGameInstance = { nullptr };
 	_float3							m_vOriginal;

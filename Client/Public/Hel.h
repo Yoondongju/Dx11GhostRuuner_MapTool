@@ -2,9 +2,7 @@
 
 
 #include "Client_Defines.h"
-#include "GameObject.h"
-
-
+#include "ContainerObject.h"
 
 
 BEGIN(Engine)
@@ -16,13 +14,15 @@ END
 
 BEGIN(Client)
 
-class CStatic_Object final : public CGameObject
+class CHel final : public CContainerObject
 {
-private:
-	CStatic_Object(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-	CStatic_Object(const CStatic_Object& Prototype);
-	virtual ~CStatic_Object() = default;
+public:
+	enum PARTID { PART_WEAPON, PART_END };
 
+private:
+	CHel(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+	CHel(const CHel& Prototype);
+	virtual ~CHel() = default;
 
 public:
 	class CModel* Get_Model() override { return m_pModel; }
@@ -38,16 +38,18 @@ public:
 
 private:
 	CShader* m_pShaderCom = { nullptr };
-	CModel*  m_pModel = { nullptr };
-	
+	CModel* m_pModel = { nullptr };
+
+
+
 
 private:
-	HRESULT		Ready_Component(_bool  isFinalMap);
-
+	HRESULT		Ready_Component();
+	HRESULT		Ready_Parts();
 
 
 public:
-	static CStatic_Object* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+	static CHel* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual CGameObject* Clone(void* pArg);
 	virtual void Free() override;
 };

@@ -54,6 +54,16 @@ CComponent* CComponent_Manager::Find_Prototype(_uint iNumLevelIndex, const _wstr
 	return iter->second;
 }
 
+_bool CComponent_Manager::IsFind_Model(_uint iLevelIndex, const _wstring& strModelPrototypeName)
+{
+	auto	iter = m_pPrototype[iLevelIndex].find(strModelPrototypeName);
+
+	if (iter == m_pPrototype[iLevelIndex].end())
+		return false;
+
+	return true;
+}
+
 CComponent_Manager* CComponent_Manager::Create(_uint iNumLevels)
 {
 	CComponent_Manager* pInstance = new CComponent_Manager();

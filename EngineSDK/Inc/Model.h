@@ -63,6 +63,7 @@ public:
 
 public:
 	virtual HRESULT Initialize_Prototype(MODEL_TYPE eType , const _char* pModelFilePath, _fmatrix PreTransformMatrix);
+	HRESULT Initialize_Prototype(MODEL_TYPE eType, const _char* pModelFilePath, _wstring* pMaterialTexturesPath, _uint iNumMeshes, _uint iMaterialsCount, _fmatrix PreTransformMatrix = XMMatrixIdentity(), void* pInitMeshArg = nullptr, void* pInitBoneArg = nullptr, void* pInitAnimationArg = nullptr);
 	virtual HRESULT Initialize(void* pArg) override;
 	virtual HRESULT Render(_uint iMeshIndex);
 
@@ -116,19 +117,28 @@ private:
 
 private:
 	_wstring						m_strModelFilePath = L"";
-	_wstring						m_strMaterials_TexturePath[15][AI_TEXTURE_TYPE_MAX] = { L"" };
+	_wstring						m_strMaterials_TexturePath[200][AI_TEXTURE_TYPE_MAX] = { L"" };
 
 
 
 
-public:
+public:							// 어심푸를 통한 로드
 	HRESULT	Ready_Meshes();
 	HRESULT Ready_Materials(const _char* pModelFilePath);
 	HRESULT Ready_Bones(const aiNode* pAIBone, _int iParentBoneIndex);
 	HRESULT Ready_Animation();
 
+public:							// 바이너리화를 통한 로드
+	HRESULT	Ready_Meshes(_uint iNumMeshes, MODEL_TYPE eModelType, void* pArg);
+	HRESULT Ready_Materials(const _char* pModelFilePath, _wstring* pMaterialTexturesPath);
+
+
+
+
+
 public:
 	static CModel* Create(ID3D11Device * pDevice, ID3D11DeviceContext * pContext, MODEL_TYPE eType,const _char * pModelFilePath, _fmatrix PreTransformMatrix = XMMatrixIdentity());
+	static CModel* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, MODEL_TYPE eType, const _char* pModelFilePath, _wstring* pMaterialTexturesPath, _uint iNumMeshes, _uint iMaterialsCount, _fmatrix PreTransformMatrix = XMMatrixIdentity(), void* pInitMeshArg = nullptr, void* pInitBoneArg = nullptr, void* pInitAnimationArg = nullptr);
 	virtual CComponent* Clone(void* pArg) override;
 	virtual void Free() override;
 };
